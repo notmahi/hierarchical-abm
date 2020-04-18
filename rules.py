@@ -21,3 +21,10 @@ class AgentRules:
     @staticmethod
     def should_agent_migrate(agent):
         pass
+
+
+class DiseaseRules:
+    @staticmethod
+    def new_disease_state(agent, num_contacts):
+        pass
+
