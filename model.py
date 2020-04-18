@@ -19,7 +19,7 @@ class Person(Agent):
 
     gender (constants):         (MALE, FEMALE)
     age (int):                  Years
-    earnings (int):             Units of currency, yearly
+    earnings (int):             1000 units of currency, yearly
     location (TBD):             Probably lat/long, for visualization
     model (EnvironmentModel):   The hierarchical model that this agent is 
                                 directly a part of.
@@ -36,7 +36,7 @@ class Person(Agent):
         # For individual agents this should be their family
         self.model = model
         # Every agent starts off in the susceptible state, unless defined
-        self.state = state or COVID_state.S
+        self.state = state or STATES.S
         # To simplify computation, this is the hierarchy tree this model is a
         # part of
         self.hierarchy_tree = [self.model]
@@ -80,7 +80,9 @@ class EnvironmentModel(Model):
                                     environment. We will decide on particulars
                                     later.
     visits (List):                  Environments are representative of physical
-                                    spaces, and thus we 
+                                    spaces, and thus we keep track of who 
+                                    visited this space in a day and simulate it
+                                    based on spatial ABMs.
     """
     def __init__(subenvs, superenvs, population, area, GISmap):
         self.subenvs = subenvs
@@ -155,4 +157,11 @@ class FamilyEnv(EnvironmentModel):
         return 0.0
 
     def own_step(self):
+        pass
+
+    @staticmethod
+    def create_family(total_size, total_income):
+    """
+    Helper method to create a family
+    """
         pass
