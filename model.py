@@ -1,12 +1,20 @@
 """
 model.py contains the generic units of our agent based model, namely the people
 units and the social units.
+
+** IMPORTANT **
+For our code to work as expected, the model has to be created top down, which
+means the root node (or the highest level of region where we are simulating) 
+must be defined first, then its subregions, and so on, until we reach the person
+level.
 """
 
 import uuid
 import numpy as np
 
 from mesa import Agent, Model
+
+from rules import AgentRules
 from constants import *
 
 class Person(Agent):
@@ -27,8 +35,11 @@ class Person(Agent):
                                 right now?
     UID (str):                  Each agent is given a single UID to make 
                                 identification and location easy.
+    is_urban (boolean):         Signify whether the agent is in a rural or urban
+                                setting
     """
-    def __init__(self, gender, age, earning, location, model, state=None):
+    def __init__(self, gender, age, earning, location, model, state = None,
+                 is_urban = False):
         self.gender = gender
         self.age = age
         self.earning = earning
@@ -37,6 +48,7 @@ class Person(Agent):
         self.model = model
         # Every agent starts off in the susceptible state, unless defined
         self.state = state or STATES.S
+        self.is_urban = is_urban
         # To simplify computation, this is the hierarchy tree this model is a
         # part of
         self.hierarchy_tree = [self.model]
@@ -50,8 +62,42 @@ class Person(Agent):
         self.uid = uuid.uuid4()
 
     def step(self):
-        """ What does this agent do in one day? """
-        pass
+        """
+        In our model, the agent can do one of two things in a day.
+        1. The agent can decide to visit (temporarily) some node in the tree.
+        2. The agent can also decide to move to some other node.
+        """
+        self.visit_tree()
+        self.possibly_migrate()
+
+    def visit_tree(self):
+        """
+        This function will need two methods.
+        To define a random distribution over the tree, we can think of walking 
+        up the tree, and then walking down.
+        So, given the agent's disposition, we can think how far up the tree the
+        agent is going, and from there how far down the tree the agent will move
+        """
+        nodes_to_visit = AgentRules.nodes_to_visit(self)
+        for node in nodes_to_visit:
+            node.register_contact(register_contact)
+        
+    def possibly_migrate():
+        """
+        This function considers each agent, and with some low probability, helps
+        the agent to decide which household this agent will migrate to.
+        """
+        if AgentRules.should_agent_migrate(self):
+            self.model = AgentRules.family_to_migrate_to(self)
+            model_now = self.model
+            self.hierarchy_tree = [self.model]
+            while model_now.superenv is not None:
+                # Build out the whole hierarchy so we can tell where this
+                # particular agent is located
+                self.hierarchy_tree.append(model_now.superenv)
+                model_now = model_now.superenv
+        
+
 
 
 class EnvironmentModel(Model):
@@ -134,7 +180,6 @@ class EnvironmentModel(Model):
         or other predefined timestep.
         """
         raise NotImplementedError('You must define subenvironment steps.')
-
 
 
 class FamilyEnv(EnvironmentModel):
