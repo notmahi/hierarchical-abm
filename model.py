@@ -189,7 +189,7 @@ class FamilyEnv(EnvironmentModel):
     composed of person agents.
     We used an average household area of 50 sq meters
     """
-    def __init__(people, superenv, area=5.0e-5):
+    def __init__(self, people, superenv, area=5.0e-5):
         self.population = len(people)
         self.people = people
         self.superenv = superenv
@@ -205,8 +205,13 @@ class FamilyEnv(EnvironmentModel):
         pass
 
     @staticmethod
-    def create_family(total_size, total_income):
+    def create_family(total_size, total_income, gender_dist):
     """
     Helper method to create a family
     """
+        pass
+
+
+class VillageEnv(EnvironmentModel):
+    def __init__(self):
         pass
