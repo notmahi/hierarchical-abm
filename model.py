@@ -130,7 +130,7 @@ class EnvironmentModel(Model):
                                     visited this space in a day and simulate it
                                     based on spatial ABMs.
     """
-    def __init__(subenvs, superenvs, population, area, GISmap):
+    def __init__(self, subenvs, superenvs, population, area, GISmap):
         self.subenvs = subenvs
         self.superenvs = superenvs
         self.population = population
@@ -149,6 +149,25 @@ class EnvironmentModel(Model):
             subenv.step()
         self.own_step()
         self.clean_up_contacts()
+
+    @classmethod
+    def from_data(cls, hierarchy_node, tree_data, parent):
+        """
+        Create an EnvironmentModel from hierarchical data recursively.
+        Warning: When using this method, the subenvs field is empty. That 
+        must be filled in manually later.
+        """
+        statistical_args = cls.parse_data(tree_data[hierarchy_node.node_hash])
+        # Warning: Must fill in subenvs seperately!
+        return cls([], parent, *statistical_args)
+
+    @staticmethod
+    def parse_data(hierarchy_data_row):
+        """
+        Given a row of statistical data in a row, this will extract the 
+        necessary information as arguments and return that.
+        """
+        raise NotImplementedError('You must define subenvironment steps.')
 
     def register_contact(self, agent):
         """
@@ -211,7 +230,3 @@ class FamilyEnv(EnvironmentModel):
     """
         pass
 
-
-class VillageEnv(EnvironmentModel):
-    def __init__(self):
-        pass
