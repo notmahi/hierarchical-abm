@@ -36,7 +36,7 @@ import json
 import pandas as pd
 
 
-class HierarchyDataNode:
+class HierarchicalDataNode:
     """
     Signify each node in the hierarchy, from a data perspective.
     """
@@ -64,7 +64,7 @@ class HierarchicalDataTree:
     def __init__(self, tree_dict, level_hierarchy, tree_data):
         self.tree_data = tree_data
         self.level_hierarchy = level_hierarchy
-        self.tree_root = HierarchyNode.from_dict(tree_dict)
+        self.tree_root = HierarchicalDataNode.from_dict(tree_dict)
 
 
 
