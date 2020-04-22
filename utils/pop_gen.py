@@ -67,10 +67,10 @@ def gen_couples(people, marriage_stats):
         p1 = people.loc[index_1]
         age = p1['age']
         # Filter for minimal age and sex
-        potential_partner = people[((people.age > 14) & 
-                                    (people.sex != p1.sex) &
-                                    (people.partner == -1)
-                                   )]
+        potential_partner = people.loc[((people.age > 14) & 
+                                        (people.sex != p1.sex) &
+                                        (people.partner == -1)
+                                    )]
         # Heuristic:
         # First, we search for partners in the 2-10 years age difference
         # Then we go for 11-20 years
@@ -79,9 +79,9 @@ def gen_couples(people, marriage_stats):
         age_range_1 = range(p1.age - 10*multiplier, p1.age - 2*multiplier, multiplier)
         age_range_2 = range(p1.age - 20*multiplier, p1.age - 11*multiplier, multiplier)
 
-        filtered_index = potential_partner[potential_partner.age.isin(age_range_1)]
+        filtered_index = potential_partner.loc[potential_partner.age.isin(age_range_1)]
         if filtered_index.empty:
-            filtered_index = potential_partner[potential_partner.age.isin(age_range_2)]
+            filtered_index = potential_partner.loc[potential_partner.age.isin(age_range_2)]
         if filtered_index.empty:
             filtered_index = potential_partner
         if filtered_index.empty:
@@ -93,14 +93,158 @@ def gen_couples(people, marriage_stats):
             index_2 = filtered_index.index[0]
             people.loc[index_1].partner = index_2
             people.loc[index_2].partner = index_1
-            couples.append((index_1, index_2))
+            couples.append(tuple(sorted((index_1, index_2))))
     return couples
 
-def assign_households(people, household_stats):
+
+def assign_households(people, couples, household_stats):
     """
     Given people with their couple status, generate households.
+
+    Our heuristic is the following:
+    1. First, separate out the single person households, and assign the single 
+    adults to them.
+    2. Then assign young or old couples to two person households.
+    3. Then, assign an initial round of couples to 3+ people households.
+    4. Fill in some gaps with kids.
+    5. Assign a second round of couples to fill in the gaps, and shift around 
+    kids to make them all fit.
+
+    Parameters:
+    people (DataFrame): Containing people's age, sex, and marital relations 
+    couples (list): A list of tuples with two spouse ids
+    household_stats (list): List of number of households of the given size
     """
-    pass
+    households = pd.DataFrame()
+    households['size'] = np.repeat(np.arange(len(household_stats)) + 1, 
+                                   household_stats)
+    households['free'] = np.array(households.size)
+    households['members'] = [set()] * len(households)
+
+    people['hh_id'] = -np.ones(len(people))
+
+    broken_up_couples = []
+    # First, fill out the single person households
+    N_1 = household_stats[0]
+    # Take adult single people
+    potentials = people.loc[(people.age >= 18) & (people.partner == people.index)]
+    if len(potentials) < N_1:
+        unrestricted_potentials = people.loc[(people.partner == people.index)]
+        potentials = pd.concat([potentials, unrestricted_potentials])
+    if len(potentials) < N_1:
+        unrestricted_potentials = people.loc[(people.partner != people.index)]
+        potentials = pd.concat([potentials, unrestricted_potentials])
+    for i, idx in enumerate(potentials.index):
+        if i >= N_1:
+            break
+        if people.loc[idx].hh_id != -1:
+            # They are already assigned, probably b/c spouses
+            N_1 += 1
+            continue
+        households.loc[i].members.add(idx)
+        households.loc[i].free -= 1
+        people.loc[idx].hh_id = i
+        if people.loc[idx].partner != idx:
+            # This person was married, who got broken up into seperate household
+            # Thus, assign spouse to a single person household too
+            partner_id = people.loc[idx, 'partner']
+            # Breaking up a couple cause they didn't have enough single people
+            broken_up_couples.append((min(idx, partner_id), max(idx, partner_id)))
+            people.loc[idx, 'partner'] = idx
+            people.loc[partner_id, 'partner'] = partner_id
+            if len(households.loc[N_1 - 1].members) == 0:
+                # There's no one in this household yet
+                people.loc[partner_id].hh_id = N_1 - 1
+                households.loc[N_1 - 1].members.add(partner_id)
+                N_1 -= 1
+                households.loc[N_1 - 1].free -= 1
+
+    # Now, once we have filled out the single household quota, we start off by
+    # giving every household a couple
+    couple_idx = 0
+    for i, idx in enumerate(households.loc[households.size > 1].index):
+        while couple_idx < len(couples) and couples[couple_idx] in broken_up_couples:
+            couple_idx += 1
+        if couple_idx == len(couples):
+            # Ran out of couples, gotta fill the rest with kids and single people.
+            break
+        # We have a couple that is unassigned, so assign them to this house
+        households.loc[idx].members.update(couples[couple_idx])
+        households.loc[idx].free -= 2
+        for person in couples[couple_idx]:
+            people.loc[person].hh_id = idx
+
+    # Keep a count of unassigned couples and singles
+    unassigned_total = len(people.loc[people.hh_id == -1])
+    unassigned_married = people.loc[((people.hh_id == -1) & 
+                                    (people.partner != people.index) )]
+    unassigned_unmarried = people.loc[((people.hh_id == -1) & 
+                                      (people.partner == people.index) )]
+
+    # Now, fill in blank space in each household with 
+    # 1. Kids
+    # 2. Married couples,
+    # 3. Unmarried adults.
+    for i, idx in enumerate(households.loc[households.free > 0].index):
+        # Kids have to be at least 16 years younger than their mother
+        mom_age = min(people.loc[households.members].age)
+        eligible_kids = people.loc[((people.hh_id == -1) & 
+                                    (people.partner == people.index) &
+                                    (people.age <= (mom_age - 16)))]
+        kid_idx = 0
+        for j in range(households.loc[idx].free):
+            if np_random.random() < (eligible_kids / unassigned_total):
+                # With probability proportional to eligible kids, add kids
+                if kid_idx < eligible_kids:
+                    # There's still some kids to be had
+                    id_of_kid = eligible_kids.index[0]
+                    households.loc[idx].members.add(id_of_kid)
+                    households.loc[idx].free -= 1
+                    people.loc[id_of_kid].hh_id = idx
+
+                    kid_idx += 1
+
+    # Now, assign couples 
+    unassigned_married_idx = 0
+    for i, idx in enumerate(households.loc[households.free > 1].index):
+        # Add married couples to the families
+        while (unassigned_married_idx < len(unassigned_married) and
+               people.loc[unassigned_married.index[unassigned_married_idx]].hh_id != -1):
+            unassigned_married_idx += 1
+        if unassigned_married_idx == len(unassigned_married):
+            # We have reached the end of married couples
+            break
+        partner_1_id = unassigned_married.index[unassigned_married_idx]
+        partner_2_id = people.loc[partner_1_id].partner
+        households.loc[idx].free -= 2
+        households.loc[idx].members.update((partner_1_id, partner_2_id))
+        people.loc[partner_1_id].hh_id = idx
+        people.loc[partner_2_id].hh_id = idx
+
+    # Now, whoever is left gets broken up and assigned randomly as long as 
+    # people are left.
+    unassigned_total = len(people.loc[people.hh_id == -1])
+    for people_id in people.loc[people.hh_id == -1].index:
+        # Household where there is space, or household where there is n+ people
+        free_households = households.loc[(households.free > 0) | (households.size == household_stats[-1])]
+        if free_households.empty:
+            # No free household! Just choose a random one from the 8+ set
+            household_to_assign_to = np_random.choice(households.index)
+        else:
+            household_to_assign_to = np_random.choice(free_households.index)
+        if people.loc[people_id].partner != people_id:
+            # if they are not single break them up, ezpz
+            partner_id = people.loc[people_id].partner
+            people.loc[people_id].partner = people_id
+            people.loc[partner_id].partner = partner_id
+        people.loc[people_id].hh_id = household_to_assign_to
+        households.loc[household_to_assign_to].free -= 1
+        households.loc[household_to_assign_to].members.add(people_id)
+
+    # Now, no people should be left.
+    assert len(people.loc[people.hh_id == -1]) == 0
+
+    return people, households
 
 
 if __name__ == '__main__':
