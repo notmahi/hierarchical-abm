@@ -184,7 +184,7 @@ def assign_households(people, couples, household_stats):
     # Now, fill in blank space in each household with 
     # 1. Kids
     # 2. Married couples,
-    # 3. Unmarried adults.
+    # 3. Unmarried adults/everyone else
     for i, idx in enumerate(households.loc[households.free > 0].index):
         # Kids have to be at least 16 years younger than their mother
         mom_age = min(people.loc[households.members].age)
@@ -223,7 +223,6 @@ def assign_households(people, couples, household_stats):
 
     # Now, whoever is left gets broken up and assigned randomly as long as 
     # people are left.
-    unassigned_total = len(people.loc[people.hh_id == -1])
     for people_id in people.loc[people.hh_id == -1].index:
         # Household where there is space, or household where there is n+ people
         free_households = households.loc[(households.free > 0) | (households.size == household_stats[-1])]
@@ -231,7 +230,7 @@ def assign_households(people, couples, household_stats):
             # No free household! Just choose a random one from the 8+ set
             household_to_assign_to = np_random.choice(households.index)
         else:
-            household_to_assign_to = np_random.choice(free_households.index)
+            household_to_assign_to = free_households.index[0]
         if people.loc[people_id].partner != people_id:
             # if they are not single break them up, ezpz
             partner_id = people.loc[people_id].partner
