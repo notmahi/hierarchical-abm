@@ -9,6 +9,7 @@ verify_ssl = true
 numpy = "*"
 pandas = "*"
 scipy = "*"
+mesa = "*"
 
 [requires]
 python_version = "3.8"
