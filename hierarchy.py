@@ -57,4 +57,28 @@ class HierachicalModel(EnvironmentModel):
                                       env))
                                     
         return final_model
-        
+
+    def step(self):
+        """
+        The step method necessary for the hierarchical model. Simply, this would
+        consist of a step on the root or "country level" model.
+
+        TODO (Mahi): Consider if we should aggregate the statistics here.
+        """
+        self.final_model.step()
+
+    def get_summary_statistics(self):
+        """
+        Get summary statistic of district-wise disease progression.
+        """
+        pass
+
+    def get_full_statistics(self):
+        """
+        Get a full report of the country population (each person is a column)
+        including:
+        1. Final disease state of the person.
+        2. Date of state changes.
+        3. People that this person spread to.
+        """
+        pass

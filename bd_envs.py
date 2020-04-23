@@ -6,6 +6,9 @@ the core models that this ABM needs to run
 
 from model import IntermediateLevelEnv, LowestLevelEnv
 
+class DivisionEnv(IntermediateLevelEnv):
+    pass
+
 class ZillaEnv(IntermediateLevelEnv):
     def own_step(self):
         """

@@ -311,7 +311,8 @@ class IntermediateLevelEnv(EnvironmentModel):
     def parse_data(hierarchy_data_row):
         """
         Parse the statistical data, generate the basic information about this 
-        env and pass along.
+        env and pass along. We don't fill up subenv because it will be filled
+        in in the HierarchicalDataTree construction.
         """
         population = hierarchy_data_row['population']
         area = hierarchy_data_row['area']
