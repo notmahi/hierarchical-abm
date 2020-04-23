@@ -246,6 +246,30 @@ def assign_households(people, couples, household_stats):
     return people, households
 
 
+def assign_income_to_households(households, household_income_stats):
+    """
+    Given income stats for households, add an 'income' column to households.
+    """
+    # TODO: Add the income column randomly to the households.
+    return households
+
+
+def generate_households_and_people(N, range_of_age, probability_of_age, 
+                                   household_stats, household_income_stats):
+    """
+    Given all relevant statistics about a populace, sample a set of people with
+    associated households.
+    """
+    # TODO: fix the global constants loading.
+    sex_ratios_by_range = None
+    marriage_stats = None
+    # Otherwise this should fail.
+    people = generate_people(N, range_of_age, probability_of_age, sex_ratios_by_range)
+    couples = gen_couples(people, marriage_stats)
+    people, households = assign_households(people, couples, household_stats)
+    household_with_income = assign_income_to_households(households, household_income_stats)
+    return people, household_with_income
+
 if __name__ == '__main__':
     N = 50
     population_ranges = [(20, 24), (25, 29)]
