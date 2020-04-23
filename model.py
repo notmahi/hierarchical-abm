@@ -16,6 +16,7 @@ from mesa import Agent, Model
 
 from rules import AgentRules
 from constants import *
+from utils.generate_population import generate_households_and_people
 
 class Person(Agent):
     """
@@ -140,6 +141,10 @@ class EnvironmentModel(Model):
         self.pop_density = self.population / self.area
         self.visits = set()
 
+        # Node-level information relevant when this model is part of a hierarchy
+        self.node_level = None
+        self.node_hash = None
+
     def step(self):
         """ 
         Environment steps happen in two stages: first, the subenvironments all
@@ -157,12 +162,16 @@ class EnvironmentModel(Model):
         Warning: When using this method, the subenvs field is empty. That 
         must be filled in manually later.
         """
-        statistical_args = cls.parse_data(tree_data[hierarchy_node.node_hash])
-        # Warning: Must fill in subenvs seperately!
-        return cls([], parent, *statistical_args)
+        subenvs, statistical_args = cls.parse_data(tree_data[hierarchy_node.node_hash])
+        # Warning: for intermediate levels, subenvs should be empty.
+        # Thus, they must be filled in seperately!
+        env = cls(subenvs, parent, *statistical_args)
+        env.node_hash = hierarchy_node.node_hash
+        env.node_level = hierarchy_node.node_level
+        return env
 
     @staticmethod
-    def parse_data(hierarchy_data_row):
+    def parse_data(hierarchy_data_row, parent=None):
         """
         Given a row of statistical data in a row, this will extract the 
         necessary information as arguments and return that.
@@ -223,10 +232,87 @@ class FamilyEnv(EnvironmentModel):
     def own_step(self):
         pass
 
-    @staticmethod
-    def create_family(total_size, total_income, gender_dist):
-    """
-    Helper method to create a family
-    """
-        pass
 
+class LowestLevelEnv(EnvironmentModel):
+    """
+    This is an abstract class to denote the lowest level available for models 
+    where the statistics is available, from which we run our population 
+    generation procedure. In the class hierarchy, this class should always be
+    a parent to FamilyEnv.
+    """
+    @classmethod
+    def from_data(cls, hierarchy_node, tree_data, parent):
+        """
+        Overriding from_data here because the families need to get created too.
+        """
+        subenvs, statistical_args = cls.parse_data(tree_data[hierarchy_node.node_hash])
+        # Warning: for intermediate levels, subenvs should be empty.
+        # Thus, they must be filled in seperately!
+        env = cls(subenvs, parent, *statistical_args)
+        env.node_hash = hierarchy_node.node_hash
+        env.node_level = hierarchy_node.node_level
+        for subenv in subenvs:
+            subenv.superenv = env
+        return env
+
+
+    @staticmethod
+    def parse_data(hierarchy_data_row):
+        """
+        Parse the statistical data, generate the basic information about this 
+        env and pass along.
+        """
+        population = hierarchy_data_row['population']
+        area = hierarchy_data_row['area']
+        age_ranges = hierarchy_data_row['age_range']
+        age_probabilities = hierarchy_data_row['age_probability']
+        household_counts = hierarchy_data_row['household_count']
+        household_incomes = hierarchy_data_row['household_income']
+        # Now, we must get use the population generation methods to fill in and
+        # create households and agents, populate the agents in the FamilyEnv
+        # and return the results.
+
+        # TODO (mahi): The following will break if the data schema changes, so
+        # make sure the schema is the same in real data, or make changes there.
+        households, people = generate_households_and_people(population, 
+                                                            age_ranges, 
+                                                            age_probabilities, 
+                                                            household_counts, 
+                                                            household_incomes)
+        
+        families = []
+        for household in households:
+            # Generate all the people first
+            family_members = []
+            for people_id in household['members']:
+                person = people.loc[people_id]
+                member = Person(gender=MALE if person.gender == 'm' else FEMALE,
+                                age=person.age,
+                                earning=household.income,
+                                location=None, # TODO: How should we change?
+                                model=None, #filled in later
+                                )
+                family_members.append(member)
+            family = FamilyEnv(family_members, superenv=None)
+            for member in family_members:
+                member.model = family
+            families.append(family)
+
+        return families, (population, area)
+
+
+class IntermediateLevelEnv(EnvironmentModel):
+    """
+    Abstract class to denote an intermediate level of environment. Basically, on
+    this level the population generation process is passed down to subenvs of 
+    this class.
+    """
+    @staticmethod
+    def parse_data(hierarchy_data_row):
+        """
+        Parse the statistical data, generate the basic information about this 
+        env and pass along.
+        """
+        population = hierarchy_data_row['population']
+        area = hierarchy_data_row['area']
+        return [], (population, area)

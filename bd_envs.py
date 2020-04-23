@@ -4,25 +4,24 @@ the core models that this ABM needs to run
 """
 
 
-from model import EnvironmentModel
+from model import IntermediateLevelEnv, LowestLevelEnv
 
-class ZillaEnv(EnvironmentModel):
-    def __init__(self):
+class ZillaEnv(IntermediateLevelEnv):
+    def own_step(self):
+        """
+        Each subclass needs to define what happens in the own_step. This step is
+        where the 2-d spatial simulation happens and people are "infected".
+        """
         pass
 
+class UpazillaEnv(IntermediateLevelEnv):
+    pass
 
-class UpazillaEnv(EnvironmentModel):
-    def __init__(self):
-        pass
+class UnionEnv(IntermediateLevelEnv):
+    pass
 
-class UnionEnv(EnvironmentModel):
-    def __init__(self):
-        pass
+class MahallaEnv(LowestLevelEnv):
+    pass
 
-class MahallaEnv(EnvironmentModel):
-    def __init__(self):
-        pass
-
-class VillageEnv(EnvironmentModel):
-    def __init__(self):
-        pass
+class VillageEnv(LowestLevelEnv):
+    pass
