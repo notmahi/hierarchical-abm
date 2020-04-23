@@ -138,7 +138,7 @@ class EnvironmentModel(Model):
         self.GISmap = None # Will have to decide how to handle later
 
         self.pop_density = self.population / self.area
-        self.visits = []
+        self.visits = set()
 
     def step(self):
         """ 
@@ -175,7 +175,7 @@ class EnvironmentModel(Model):
         through the day, we use this function that lets the agent attach its
         uid to this particular environment
         """
-        self.visits.append(agent.uid)
+        self.visits.add(agent.uid)
 
     @property
     def leaving_probability(self):
@@ -190,7 +190,7 @@ class EnvironmentModel(Model):
         Helper function to (probabilisitically) clean up the visits from the day
         """
         # Keep someone already in the env with probability 1-leaving_probability
-        self.visits = [x for x in self.visits if np.random.random_sample() > self.leaving_probability]
+        self.visits = set([x for x in self.visits if np.random.random_sample() > self.leaving_probability])
 
     def own_step(self):
         """
