@@ -6,6 +6,8 @@ combining all of them with hierarchy.py, and then running through the steps and
 aggregating the data at the necessary level.
 """
 
+import argparse
+
 from hierarchy import HierachicalModel
 from data_parser import HierarchicalDataTree
 from bd_envs import *
@@ -14,6 +16,30 @@ from bd_envs import *
 TODO (mahi): This is placeholder code since we do not have the data yet. But we
 are trying to create approximately what the information may look like.
 """
+
+parser = argparse.ArgumentParser(description='Run an agent-based model for the \
+    COVID-19 infected data.')
+
+necessary = parser.add_argument_group('Mandatory', 'Necessary data for every \
+    run of the simulation.')
+necessary.add_argument('--hierarchy_tree', type=str, help='Relative path for the\
+    hierarchy network. (*.json)')
+necessary.add_argument('--tree_nodes', type=str, help='Relative path for the table\
+    containing information about the tree nodes. (*.csv)')
+necessary.add_argument('--contact_matrix', type=str, help='Relative path for load\
+    ing the contact matrix file.')
+
+io = parser.add_argument_group('Input/output', 'Input/output options')
+io.add_argument('--out_dir', type=str, help='Output location.')
+io.add_argument('--resume_from', type=str, help='Saved state data to load from')
+
+optional = parser.add_argument_group('Optional', 'Arguments with some default \
+    in place.')
+optional.add_argument('--age_pyramid', type=str, default='data\bangladesh_populat\
+    ion_pyramid_2017.csv', help='Relative path for age pyramid.')
+optional.add_argument('--marriage_data', type=str, default='data\marriage_data_bd\
+    .csv', help='Age-wise marriage data for population generation.')
+parser.parse_args()
 
 # Step 1: Parse the data into two forms: a nested dict for the tree structure
 #         and a dataframe for the node-level statistics

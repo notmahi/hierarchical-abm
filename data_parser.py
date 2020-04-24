@@ -45,7 +45,7 @@ class HierarchicalDataNode:
         self.node_level = node_level
         self.sub_nodes = sub_nodes
 
-    def set_parent(self, parent)
+    def set_parent(self, parent):
         self.node_parent = parent
 
     @classmethod
