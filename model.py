@@ -11,9 +11,7 @@ level.
 
 import uuid
 import numpy as np
-
 from mesa import Agent, Model
-
 from rules import AgentRules
 from constants import *
 from utils.generate_population import generate_households_and_people
