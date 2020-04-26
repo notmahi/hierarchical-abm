@@ -8,7 +8,7 @@ model building.
 
 from collections import deque
 
-from data_parser import HierarchicalDataTree
+from data import HierarchicalDataTree
 from model import EnvironmentModel
 
 class HierachicalModel(EnvironmentModel):

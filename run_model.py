@@ -1,6 +1,6 @@
 """
 run_model.py is the main executable file for the model. Basically, this file is
-responsible for parsing the raw data given to the model using data_parser.py,
+responsible for parsing the raw data given to the model using data.py,
 importing the necessary environments and agents from bd_envs and model.py, and
 combining all of them with hierarchy.py, and then running through the steps and
 aggregating the data at the necessary level.
@@ -9,7 +9,7 @@ aggregating the data at the necessary level.
 import argparse
 
 from hierarchy import HierachicalModel
-from data_parser import HierarchicalDataTree
+from data import HierarchicalDataTree
 from bd_envs import *
 
 """

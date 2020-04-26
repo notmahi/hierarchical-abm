@@ -1,5 +1,5 @@
 """
-data_parser.py parses the data and creates a hierarchical ABM based on that. The
+data.py parses the data and creates a hierarchical ABM based on that. The
 code consumes data in two parts, first the tree structure has to be given as a 
 python nested dictionary, and secondly, each node in that nested dictionary
 needs to have the information in a row in a dataframe.
