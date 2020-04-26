@@ -56,7 +56,7 @@ def gen_couples(people, marriage_stats):
     """
     people['partner'] = [-1] * len(people)
     couples = []
-    people.partner = people.apply(lambda x: -1 if np.random.random() < marriage_stats[x.age] else 0)
+    people.partner = people.apply(lambda x: -1 if np.random.random() < marriage_stats[(x.sex, x.age)] else 0)
     # All kids are unmarried/self partnered
     people.loc[people.partner == 0, 'partner'] = people.loc[people.partner == 0].index    
     male_pop = people[people.sex == 'm']

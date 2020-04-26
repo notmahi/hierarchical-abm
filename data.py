@@ -66,5 +66,3 @@ class HierarchicalDataTree:
         self.level_hierarchy = level_hierarchy
         self.tree_root = HierarchicalDataNode.from_dict(tree_dict)
 
-
-
