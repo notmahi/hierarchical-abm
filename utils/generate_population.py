@@ -32,7 +32,6 @@ class PopulationEngine:
         self.area = row.area
 
         # Figure out the data saving location
-        # import pdb; pdb.set_trace()
         self.file_loc = os.path.join(data_loc, str(seed), self.row.name)
         if not os.path.exists(self.file_loc):
             # Create the directory if it does not exist.
@@ -91,8 +90,6 @@ class PopulationEngine:
             np_random.shuffle(sexes)
             dfs.append(pd.DataFrame({'age':ages,'sex':sexes}))
         df = pd.concat(dfs)
-        if not (df['age'].dtype == 'int64'):
-            import pdb; pdb.set_trace()
         # Now, randomize their location
         df = df.sample(frac=1,random_state=self.seed).reset_index(drop=True)
         return df
@@ -181,11 +178,10 @@ class PopulationEngine:
         households = pd.DataFrame()
         households['size'] = np.repeat(np.arange(len(household_stats)) + 1, 
                                     household_stats)
-        households['free'] = np.array(households.size)
+        households['free'] = np.array(households['size'])
         households['members'] = [[] for i in range(len(households))]
 
         people['hh_id'] = -np.ones(len(people))
-
         broken_up_couples = []
         # First, fill out the single person households
         N_1 = household_stats[0]
@@ -205,22 +201,22 @@ class PopulationEngine:
                 N_1 += 1
                 continue
             households.loc[i].members.append(idx)
-            households.loc[i].free -= 1
-            people.loc[idx].hh_id = i
+            households.at[i, 'free'] = households.loc[i].free - 1
+            people.at[idx, 'hh_id'] = i
             if people.loc[idx].partner != idx:
                 # This person was married, who got broken up into seperate household
                 # Thus, assign spouse to a single person household too
                 partner_id = people.loc[idx, 'partner']
                 # Breaking up a couple cause they didn't have enough single people
                 broken_up_couples.append((min(idx, partner_id), max(idx, partner_id)))
-                people.loc[idx, 'partner'] = idx
-                people.loc[partner_id, 'partner'] = partner_id
+                people.at[idx, 'partner'] = idx
+                people.at[partner_id, 'partner'] = partner_id
                 if len(households.loc[N_1 - 1].members) == 0:
                     # There's no one in this household yet
-                    people.loc[partner_id].hh_id = N_1 - 1
+                    people.at[partner_id, 'hh_id'] = N_1 - 1
                     households.loc[N_1 - 1].members.append(partner_id)
                     N_1 -= 1
-                    households.loc[N_1 - 1].free -= 1
+                    households.at[N_1 - 1, 'free'] = households.loc[N_1 - 1, 'free'] - 1
 
         # Now, once we have filled out the single household quota, we start off by
         # giving every household a couple
@@ -233,9 +229,10 @@ class PopulationEngine:
                 break
             # We have a couple that is unassigned, so assign them to this house
             households.loc[idx].members.extend(couples[couple_idx])
-            households.loc[idx].free -= 2
+            households.at[idx, 'free'] = households.loc[idx].free - 2
             for person in couples[couple_idx]:
-                people.loc[person].hh_id = idx
+                people.at[person, 'hh_id'] = idx
+            couple_idx += 1 # We used up another couple
 
         # Keep a count of unassigned couples and singles
         unassigned_total = len(people.loc[people.hh_id == -1])
@@ -262,8 +259,8 @@ class PopulationEngine:
                         # There's still some kids to be had
                         id_of_kid = eligible_kids.index[kid_idx]
                         households.loc[idx].members.append(id_of_kid)
-                        households.loc[idx].free -= 1
-                        people.loc[id_of_kid].hh_id = idx
+                        households.at[idx, 'free'] = households.loc[idx].free - 1
+                        people.at[id_of_kid, 'hh_id'] = idx
 
                         kid_idx += 1
 

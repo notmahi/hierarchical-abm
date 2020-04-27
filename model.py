@@ -315,7 +315,7 @@ class LowestLevelEnv(EnvironmentModel):
         # create households and agents, populate the agents in the FamilyEnv
         # and return the results.
 
-        population_engine = PopulationEngine(hierarchy_data_row, seed=0)
+        population_engine = PopulationEngine(hierarchy_data_row, seed=12)
         # TODO (mahi): The following will break if the data schema changes, so
         # make sure the schema is the same in real data, or make changes there.
         people, households = population_engine.get_people_and_households()
