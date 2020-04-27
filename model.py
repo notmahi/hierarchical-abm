@@ -14,7 +14,8 @@ import numpy as np
 from mesa import Agent, Model
 from rules import AgentRules, DiseaseRules
 from constants import *
-from utils.generate_population import generate_households_and_people
+from utils.generate_population import (generate_households_and_people, 
+                                       preprocess_data)
 
 class Person(Agent):
     """
@@ -66,7 +67,7 @@ class Person(Agent):
         # To simplify computation, this is the hierarchy tree this model is a
         # part of
         self.hierarchy_tree = [self.model]
-        env_now = self.model
+        model_now = self.model
         while model_now.superenv is not None:
             # Build out the whole hierarchy so we can tell where this particular
             # agent is located
@@ -157,7 +158,7 @@ class EnvironmentModel(Model):
                                     visited this space in a day and simulate it
                                     based on spatial ABMs.
     """
-    def __init__(self, subenvs, superenvs, population, area, GISmap):
+    def __init__(self, subenvs, superenvs, population, area, GISmap=None):
         self.subenvs = subenvs
         self.superenvs = superenvs
         self.population = population
@@ -172,7 +173,7 @@ class EnvironmentModel(Model):
         self.node_hash = None
         self.is_main_node = False
 
-    def step(self):
+    def step(self, contact_simulation):
         """ 
         Environment steps happen in two stages: first, the subenvironments all
         make their steps. Once they are done, this environment makes its step.
@@ -180,7 +181,7 @@ class EnvironmentModel(Model):
         # Removed for flattened execution.
         # for subenv in self.subenvs:
         #     subenv.step()
-        self.own_step()
+        self.own_step(contact_simulation)
         self.clean_up_contacts()
 
     @classmethod
@@ -190,7 +191,7 @@ class EnvironmentModel(Model):
         Warning: When using this method, the subenvs field is empty. That 
         must be filled in manually later.
         """
-        subenvs, statistical_args = cls.parse_data(tree_data[hierarchy_node.node_hash])
+        subenvs, statistical_args = cls.parse_data(tree_data.loc[hierarchy_node.node_hash])
         # Warning: for intermediate levels, subenvs should be empty.
         # Thus, they must be filled in seperately!
         env = cls(subenvs, parent, *statistical_args)
@@ -261,7 +262,7 @@ class FamilyEnv(EnvironmentModel):
         self.people = people
         self.superenv = superenv
         self.area = area
-        super().__init__(people, superenv, population, area, None)
+        super().__init__(people, superenv, self.population, area, None)
 
     @property
     def leaving_probability(self):
@@ -291,7 +292,7 @@ class LowestLevelEnv(EnvironmentModel):
         """
         Overriding from_data here because the families need to get created too.
         """
-        subenvs, statistical_args = cls.parse_data(tree_data[hierarchy_node.node_hash])
+        subenvs, statistical_args = cls.parse_data(tree_data.loc[hierarchy_node.node_hash])
         # Warning: for intermediate levels, subenvs should be empty.
         # Thus, they must be filled in seperately!
         env = cls(subenvs, parent, *statistical_args)
@@ -309,12 +310,10 @@ class LowestLevelEnv(EnvironmentModel):
         Parse the statistical data, generate the basic information about this 
         env and pass along.
         """
-        population = hierarchy_data_row['population']
+        population = hierarchy_data_row['pop_total']
         area = hierarchy_data_row['area']
-        age_ranges = hierarchy_data_row['age_range']
-        age_probabilities = hierarchy_data_row['age_probability']
-        household_counts = hierarchy_data_row['household_count']
-        household_incomes = hierarchy_data_row['household_income']
+        (age_ranges, age_probabilities, 
+         household_counts, household_incomes) = preprocess_data(hierarchy_data_row)
         # Now, we must get use the population generation methods to fill in and
         # create households and agents, populate the agents in the FamilyEnv
         # and return the results.
@@ -328,12 +327,12 @@ class LowestLevelEnv(EnvironmentModel):
                                                             household_incomes)
         
         families = []
-        for household in households:
+        for household in households.itertuples():
             # Generate all the people first
             family_members = []
-            for people_id in household['members']:
+            for people_id in household.members:
                 person = people.loc[people_id]
-                member = Person(gender=MALE if person.gender == 'm' else FEMALE,
+                member = Person(gender=MALE if person.sex == 'm' else FEMALE,
                                 age=person.age,
                                 earning=household.income,
                                 location=None, # TODO: How should we change?
@@ -361,6 +360,6 @@ class IntermediateLevelEnv(EnvironmentModel):
         env and pass along. We don't fill up subenv because it will be filled
         in in the HierarchicalDataTree construction.
         """
-        population = hierarchy_data_row['population']
+        population = hierarchy_data_row['pop_total']
         area = hierarchy_data_row['area']
         return [], (population, area)

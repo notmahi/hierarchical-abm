@@ -28,10 +28,10 @@ necessary = parser.add_argument_group('Mandatory', 'Necessary data for every \
 necessary.add_argument('--steps', type=int, help='Number of steps to run.')
 necessary.add_argument('--hierarchy_tree', type=str, help='Relative path for \
     the hierarchy network. (*.json)')
-necessary.add_argument('--tree_nodes', type=str, help='Relative path for the \
+necessary.add_argument('--nodes_data', type=str, help='Relative path for the \
     table containing information about the tree nodes. (*.csv)')
 necessary.add_argument('--contact_matrix', type=str, help='Relative path for \
-    loading the contact matrix file.')
+    loading the contact matrix file.', default='data_files/bd_mu_all_loc.csv')
 
 io = parser.add_argument_group('Input/output', 'Input/output options')
 io.add_argument('--out_dir', type=str, help='Output location.')
@@ -43,18 +43,17 @@ optional.add_argument('--age_pyramid', type=str, default='data_files/bangladesh\
     _population_pyramid_2017.csv', help='Relative path for age pyramid.')
 optional.add_argument('--marriage_data', type=str, default='data_files/marriage\
     _data_bd.csv', help='Age-wise marriage data for population generation.')
-optiona.add_argument('--contact_matrix', type=str, default='data_files/bd_mu_al\
-    l_loc.csv', help='Contact matrix between ages.')
+
 args = parser.parse_args()
 
 # Step 1: Parse the data into two forms: a nested dict for the tree structure
 #         and a dataframe for the node-level statistics
 # TODO (mahi): Load these from provided data files.
 level_hierarchy = None
-tree_data = pd.read_csv(args.tree_nodes)
-with open(args.tree_nodes, 'r') as f:
+tree_data = pd.read_csv(args.nodes_data).set_index('node_hash')
+with open(args.hierarchy_tree, 'r') as f:
     tree_dict = json.load(f)
-contact_matrix = pd.read_csv(args.contact_matrix)
+contact_matrix = pd.read_csv(args.contact_matrix).to_numpy()
 
 # Step 2: Use the parsed data to create a HierarchicalModel which is able to 
 #         run the simulation
@@ -65,7 +64,7 @@ data_holder = HierarchicalDataTree(tree_dict=tree_dict,
 
 # Has to be the same order as level_hierarcht
 organizational_levels = (
-    DivisionEnv,
+    # DivisionEnv,
     ZillaEnv, 
     UpazillaEnv,
     UnionEnv,
@@ -73,7 +72,7 @@ organizational_levels = (
     VillageEnv
 )
 
-model = HierarchicalModel(data_holder, organizational_levels)
+model = HierarchicalModel(data_holder, organizational_levels, contact_matrix)
 
 # Step 3: Seed the simulation, initialize the disease state in some individuals.
 # TODO: (figure out model seeding parameters)

@@ -28,17 +28,19 @@ class HierarchicalModel(EnvironmentModel):
         self.hierarchy_data = hierarchy_data
         self.contact_matrix = contact_matrix
         self.contact_simulation = partial(simulate, contact_matrix=contact_matrix)
-        self._verify()
-        self.final_model = self._build()
-
         # These are the large structures to keep track of all envs and people
         self._people = {}
         self._envs = {}
+        
+        self._verify()
+        self.final_model = self._build()
+
 
     def _verify(self):
         assert isinstance(self.hierarchy_data, HierarchicalDataTree)
         for model in self.hierarchy_models:
-            assert isinstance(model, EnvironmentModel)
+            assert issubclass(model, EnvironmentModel), f'{model} isn\' an envi\
+                ronmental model'
 
     def _build(self):
         """
@@ -48,13 +50,13 @@ class HierarchicalModel(EnvironmentModel):
         root_node = self.hierarchy_data.tree_root
         # process queue has the general format: node_now, model_now, parent
         process_queue = deque([(root_node, 
-                                hierarchy_models[root_node.node_level], 
+                                self.hierarchy_models[root_node.node_level], 
                                 None)])
         
         final_model = None
         while len(process_queue) > 0:
             node_now, model_now, parent = process_queue.pop()
-            env = model_now.from_data(node_now, self.hierarchy_data, 
+            env = model_now.from_data(node_now, self.hierarchy_data.tree_data, 
                                       parent, self)
             # attach this env to the hierarchy
             self._envs[env.node_hash] = env
@@ -64,7 +66,7 @@ class HierarchicalModel(EnvironmentModel):
                 final_model = env
             for subnode in node_now.sub_nodes:
                 process_queue.append((subnode, 
-                                      hierarchy_models[subnode.node_level], 
+                                      self.hierarchy_models[subnode.node_level], 
                                       env))
                                     
         return final_model
@@ -83,19 +85,19 @@ class HierarchicalModel(EnvironmentModel):
         # First, we take steps for every person, which is populating the 
         # ABM hierarchy tree based on what they visited that day.
         # TODO (tmoon): parallelize
-        for (uuid, person) in self._people:
+        for (uuid, person) in self._people.items():
             person.step()
 
         # Then, once the tree's contacts are populated, run their individual 
         # steps.
         # TODO (tmoon): parallelize
-        for (node_hash, env) in self._envs:
+        for (node_hash, env) in self._envs.items():
             env.step(self.contact_simulation)
 
         # Once the environments have processed the contacts, update the 
         # individual's disease progression.
         # TODO (tmoon): parallelize
-        for (uuid, person) in self._people:
+        for (uuid, person) in self._people.items():
             person.process_contacts_and_update_disease_state()
 
 
@@ -103,7 +105,7 @@ class HierarchicalModel(EnvironmentModel):
         """
         Function to register the population of the hierarchy
         """
-        self._people[person.uuid] = person
+        self._people[person.uid] = person
 
     def get_summary_statistics(self):
         """
@@ -119,4 +121,7 @@ class HierarchicalModel(EnvironmentModel):
         2. Date of state changes.
         3. People that this person spread to.
         """
+        pass
+
+    def seed(self, seed_params):
         pass

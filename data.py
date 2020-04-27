@@ -54,7 +54,7 @@ class HierarchicalDataNode:
 
     @classmethod
     def from_dict(cls, node_dict, node_parent=None):
-        subnodes = [HierarchyNode.from_dict(subnode_dict) for subnode_dict in node_dict['sub_nodes']]
+        subnodes = [HierarchicalDataNode.from_dict(subnode_dict) for subnode_dict in node_dict['sub_nodes']]
         node_now = cls(node_dict['node_hash'], node_dict['node_level'], subnodes)
         main_node_hash = node_dict['main_sub_node_hash']
         for node in subnodes:

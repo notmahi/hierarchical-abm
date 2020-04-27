@@ -7,14 +7,13 @@ later, and so that we can add more parameters to agent behavior easily.
 """
 
 import numpy as np
-from model import Person, EnvironmentModel
 from typing import List
 from constants import STATES, T_INC, T_INF_MILD, T_INF_WILD, T_INF_WILD, PROB_MILD, age_to_age_group, CONTACT_MATRIX, GENDER_FACTOR
 from enum import Enum
 
 class AgentRules:
     @staticmethod
-    def nodes_to_visit(agent: Person) -> List(EnvironmentModel):
+    def nodes_to_visit(agent):
         pass
 
     @staticmethod
@@ -28,7 +27,7 @@ class AgentRules:
 
 class DiseaseRules:
     @staticmethod
-    def new_disease_state(agent: Person, contacts: List(Person)) -> Enum:
+    def new_disease_state(agent, contacts) -> Enum:
         """
         compute the new disease state for an agent given the list of
         other agents he/she has came in contact with in the past day
@@ -83,7 +82,7 @@ class DiseaseRules:
                 return STATES.R
             else:
                 return STATES.I_wild
-        if agent.state == STATES.R
+        if agent.state == STATES.R:
             # if a person is removed, he/she is immune to
             # the disease
             return STATES.R
