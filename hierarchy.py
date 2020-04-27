@@ -13,7 +13,7 @@ from data import HierarchicalDataTree
 from model import EnvironmentModel
 from simulation import simulate
 
-class HierachicalModel(EnvironmentModel):
+class HierarchicalModel(EnvironmentModel):
     """
     A hierarchy is an ABM environmental model that encompasses our hierarchical
     structure. This Model takes care of building this class from scratch.

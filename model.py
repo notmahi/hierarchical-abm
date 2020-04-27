@@ -91,8 +91,9 @@ class Person(Agent):
         agent is going, and from there how far down the tree the agent will move
         """
         nodes_to_visit = AgentRules.nodes_to_visit(self)
-        for node in nodes_to_visit:
-            node.register_contact(register_contact)
+        if nodes_to_visit:
+            for node in nodes_to_visit:
+                node.register_contact(register_contact)
         
     def possibly_migrate(self):
         """
