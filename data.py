@@ -44,15 +44,22 @@ class HierarchicalDataNode:
         self.node_hash = node_hash
         self.node_level = node_level
         self.sub_nodes = sub_nodes
+        self.is_main_node = False
 
     def set_parent(self, parent):
         self.node_parent = parent
+
+    def set_main_node(self):
+        self.is_main_node = True
 
     @classmethod
     def from_dict(cls, node_dict, node_parent=None):
         subnodes = [HierarchyNode.from_dict(subnode_dict) for subnode_dict in node_dict['sub_nodes']]
         node_now = cls(node_dict['node_hash'], node_dict['node_level'], subnodes)
+        main_node_hash = node_dict['main_sub_node_hash']
         for node in subnodes:
+            if node.node_hash == main_node_hash:
+                node.set_main_node()
             node.set_parent(node_now)
         return node_now
 

@@ -142,6 +142,7 @@ class EnvironmentModel(Model):
         # Node-level information relevant when this model is part of a hierarchy
         self.node_level = None
         self.node_hash = None
+        self.is_main_node = False
 
     def step(self):
         """ 
@@ -166,6 +167,7 @@ class EnvironmentModel(Model):
         env = cls(subenvs, parent, *statistical_args)
         env.node_hash = hierarchy_node.node_hash
         env.node_level = hierarchy_node.node_level
+        env.is_main_node = hierarchy_node.is_main_node
         return env
 
     @staticmethod
