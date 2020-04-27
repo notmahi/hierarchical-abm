@@ -7,9 +7,11 @@ model building.
 """
 
 from collections import deque
+from functools import partial
 
 from data import HierarchicalDataTree
 from model import EnvironmentModel
+from simulation import simulate
 
 class HierachicalModel(EnvironmentModel):
     """
@@ -21,11 +23,17 @@ class HierachicalModel(EnvironmentModel):
     hierarchy_models (list of EnvironmentModel): Tells us to use different env 
                                         models at different levels of hierarchy.
     """
-    def __init__(self, hierarchy_data, hierarchy_models):
+    def __init__(self, hierarchy_data, hierarchy_models, contact_matrix):
         self.hierarchy_models = hierarchy_models
         self.hierarchy_data = hierarchy_data
+        self.contact_matrix = contact_matrix
+        self.contact_simulation = partial(simulate, contact_matrix=contact_matrix)
         self._verify()
         self.final_model = self._build()
+
+        # These are the large structures to keep track of all envs and people
+        self._people = {}
+        self._envs = {}
 
     def _verify(self):
         assert isinstance(self.hierarchy_data, HierarchicalDataTree)
@@ -46,7 +54,10 @@ class HierachicalModel(EnvironmentModel):
         final_model = None
         while len(process_queue) > 0:
             node_now, model_now, parent = process_queue.pop()
-            env = model_now.from_data(node_now, self.hierarchy_data, parent)
+            env = model_now.from_data(node_now, self.hierarchy_data, 
+                                      parent, self)
+            # attach this env to the hierarchy
+            self._envs[env.node_hash] = env
             if parent is not None:
                 parent.subenvs.append(env)
             else:
@@ -65,7 +76,34 @@ class HierachicalModel(EnvironmentModel):
 
         TODO (Mahi): Consider if we should aggregate the statistics here.
         """
-        self.final_model.step()
+        # For parallelization, we do not run the model in a tree-like manner
+        # self.final_model.step()
+        # Instead, we run the steps in loops
+
+        # First, we take steps for every person, which is populating the 
+        # ABM hierarchy tree based on what they visited that day.
+        # TODO (tmoon): parallelize
+        for (uuid, person) in self._people:
+            person.step()
+
+        # Then, once the tree's contacts are populated, run their individual 
+        # steps.
+        # TODO (tmoon): parallelize
+        for (node_hash, env) in self._envs:
+            env.step(self.contact_simulation)
+
+        # Once the environments have processed the contacts, update the 
+        # individual's disease progression.
+        # TODO (tmoon): parallelize
+        for (uuid, person) in self._people:
+            person.process_contacts_and_update_disease_state()
+
+
+    def register_person(self, person):
+        """
+        Function to register the population of the hierarchy
+        """
+        self._people[person.uuid] = person
 
     def get_summary_statistics(self):
         """

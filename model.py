@@ -12,7 +12,7 @@ level.
 import uuid
 import numpy as np
 from mesa import Agent, Model
-from rules import AgentRules
+from rules import AgentRules, DiseaseRules
 from constants import *
 from utils.generate_population import generate_households_and_people
 
@@ -36,6 +36,7 @@ class Person(Agent):
                                 identification and location easy.
     is_urban (boolean):         Signify whether the agent is in a rural or urban
                                 setting
+    contacts (List):            Track of the contacts an agent had in a day
     """
     def __init__(self, gender, age, earning, location, model, state = None,
                  is_urban = False):
@@ -48,6 +49,20 @@ class Person(Agent):
         # Every agent starts off in the susceptible state, unless defined
         self.state = state or STATES.S
         self.is_urban = is_urban
+        self.model = model
+
+        self.uid = uuid.uuid4()
+
+        # Keeping track of the contacts that 
+        self.contacts = []
+
+    def set_model(self, model):
+        """
+        Helper function for setting a person's model (aka a family) and 
+        computing the hierarchy tree.
+        """
+        if self.model is None:
+            self.model = model
         # To simplify computation, this is the hierarchy tree this model is a
         # part of
         self.hierarchy_tree = [self.model]
@@ -57,8 +72,6 @@ class Person(Agent):
             # agent is located
             self.hierarchy_tree.append(model_now.superenv)
             model_now = model_now.superenv
-
-        self.uid = uuid.uuid4()
 
     def step(self):
         """
@@ -81,7 +94,7 @@ class Person(Agent):
         for node in nodes_to_visit:
             node.register_contact(register_contact)
         
-    def possibly_migrate():
+    def possibly_migrate(self):
         """
         This function considers each agent, and with some low probability, helps
         the agent to decide which household this agent will migrate to.
@@ -96,7 +109,21 @@ class Person(Agent):
                 self.hierarchy_tree.append(model_now.superenv)
                 model_now = model_now.superenv
         
+    def register_contacts(self, contacts):
+        """
+        Given a list of contacts a person had in a day in some environment, 
+        update the agents' contact list.
+        """
+        self.contacts.extend(contacts)
 
+    def process_contacts_and_update_disease_state(self):
+        """
+        Given the final list of contacts the agent had in a day, process them
+        to update the agent's disease state.
+        """
+        self.state = DiseaseRules.new_disease_state(self, self.contacts)
+        # empty out contacts at the end of the day.
+        self.contacts = []
 
 
 class EnvironmentModel(Model):
@@ -149,13 +176,14 @@ class EnvironmentModel(Model):
         Environment steps happen in two stages: first, the subenvironments all
         make their steps. Once they are done, this environment makes its step.
         """
-        for subenv in self.subenvs:
-            subenv.step()
+        # Removed for flattened execution.
+        # for subenv in self.subenvs:
+        #     subenv.step()
         self.own_step()
         self.clean_up_contacts()
 
     @classmethod
-    def from_data(cls, hierarchy_node, tree_data, parent):
+    def from_data(cls, hierarchy_node, tree_data, parent, hierarchy=None):
         """
         Create an EnvironmentModel from hierarchical data recursively.
         Warning: When using this method, the subenvs field is empty. That 
@@ -184,7 +212,7 @@ class EnvironmentModel(Model):
         through the day, we use this function that lets the agent attach its
         uid to this particular environment
         """
-        self.visits.add(agent.uid)
+        self.visits.add(agent)
 
     @property
     def leaving_probability(self):
@@ -192,7 +220,9 @@ class EnvironmentModel(Model):
         We want leaving probability to be dynamic, possibly, which is why we keep
         it flexible.
         """
-        raise NotImplementedError('You must define subenvironment steps.')
+        # TODO (mahi): revisit this to make it more realistic.
+        # raise NotImplementedError('You must define subenvironment steps.')
+        return 1.0
 
     def clean_up_contacts(self):
         """
@@ -201,13 +231,21 @@ class EnvironmentModel(Model):
         # Keep someone already in the env with probability 1-leaving_probability
         self.visits = set([x for x in self.visits if np.random.random_sample() > self.leaving_probability])
 
-    def own_step(self):
+    def own_step(self, contact_simulation):
         """
         We take this step once the steps at a subenv level has been completed.
         We can think of this event as "what happened in the district" on a day
         or other predefined timestep.
+
+        Params:
+        contact_simulation (Callable: List(Person) -> Dict[Person, List(Person)])
         """
-        raise NotImplementedError('You must define subenvironment steps.')
+        # raise NotImplementedError('You must define subenvironment steps.')
+        # Step 1: simulate a round of contacts.
+        people_contacts = contact_simulation(list(self.visits))
+        # Step 2: register that round of contacts with the people.
+        for (person, contacts) in people_contacts.items():
+            person.register_contacts(contacts)
 
 
 class FamilyEnv(EnvironmentModel):
@@ -232,6 +270,13 @@ class FamilyEnv(EnvironmentModel):
     def own_step(self):
         pass
 
+    def register_hierarchy(self, hierarchy):
+        """
+        Helper method to register all the people with the hierarchy.
+        """
+        for person in self.people:
+            hierarchy.register_person(person)
+
 
 class LowestLevelEnv(EnvironmentModel):
     """
@@ -241,7 +286,7 @@ class LowestLevelEnv(EnvironmentModel):
     a parent to FamilyEnv.
     """
     @classmethod
-    def from_data(cls, hierarchy_node, tree_data, parent):
+    def from_data(cls, hierarchy_node, tree_data, parent, hierarchy):
         """
         Overriding from_data here because the families need to get created too.
         """
@@ -253,6 +298,7 @@ class LowestLevelEnv(EnvironmentModel):
         env.node_level = hierarchy_node.node_level
         for subenv in subenvs:
             subenv.superenv = env
+            subenv.register_hierarchy(hierarchy) # Register the population
         return env
 
 
@@ -295,7 +341,7 @@ class LowestLevelEnv(EnvironmentModel):
                 family_members.append(member)
             family = FamilyEnv(family_members, superenv=None)
             for member in family_members:
-                member.model = family
+                member.set_model(family)
             families.append(family)
 
         return families, (population, area)

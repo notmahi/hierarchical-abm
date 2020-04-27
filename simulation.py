@@ -5,7 +5,7 @@ from typing import List, Dict
 from constants import AGE_GROUPS, age_to_age_group
 
 
-def simulate(agents: List(Person), contact_matrix: np.array) -> Dict[Person, Person]:
+def simulate(agents: List(Person), contact_matrix: np.array) -> Dict[Person, List(Person)]:
     """
     simulate non-spatial contact among a group of agents.
 

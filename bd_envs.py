@@ -10,12 +10,7 @@ class DivisionEnv(IntermediateLevelEnv):
     pass
 
 class ZillaEnv(IntermediateLevelEnv):
-    def own_step(self):
-        """
-        Each subclass needs to define what happens in the own_step. This step is
-        where the 2-d spatial simulation happens and people are "infected".
-        """
-        pass
+    pass
 
 class UpazillaEnv(IntermediateLevelEnv):
     pass
