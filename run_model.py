@@ -9,6 +9,8 @@ aggregating the data at the necessary level.
 import argparse
 import json
 
+import time
+
 import pandas as pd
 
 from hierarchy import HierarchicalModel
@@ -49,11 +51,14 @@ args = parser.parse_args()
 # Step 1: Parse the data into two forms: a nested dict for the tree structure
 #         and a dataframe for the node-level statistics
 # TODO (mahi): Load these from provided data files.
+begin = time.perf_counter()
 level_hierarchy = None
 tree_data = pd.read_csv(args.nodes_data).set_index('node_hash')
 with open(args.hierarchy_tree, 'r') as f:
     tree_dict = json.load(f)
 contact_matrix = pd.read_csv(args.contact_matrix).to_numpy()
+loading_data_files = time.perf_counter()
+print(f'Loaded data files, {loading_data_files - begin} seconds.')
 
 # Step 2: Use the parsed data to create a HierarchicalModel which is able to 
 #         run the simulation
@@ -73,21 +78,32 @@ organizational_levels = (
 )
 
 model = HierarchicalModel(data_holder, organizational_levels, contact_matrix)
+loading_tree = time.perf_counter()
+print(f'Loaded tree, {loading_tree - loading_data_files} seconds.')
 
 # Step 3: Seed the simulation, initialize the disease state in some individuals.
 # TODO: (figure out model seeding parameters)
 seed_params = None
 model.seed(seed_params)
+seeding_time = time.perf_counter()
+print(f'Seeded tree, {seeding_time - loading_tree} seconds.')
 
 # Step 4: Run the simulation for T days where T is the given number of days
 #         and generating summary statistics every day.
 T = args.steps
-for time in range(T):
+for t in range(T):
+    loop_begin_time = time.perf_counter()
     model.step()
     summary_stats = model.get_summary_statistics()
+    loop_end_time = time.perf_counter()
+    print(f'Ran {t} loops, time: {loop_end_time - loop_begin_time}s')
     # TODO (mahi): save the summary stats
 
 # Step 5: At the end of the simulation, generate a full statistics about the
 #         state of the people at time T.
+
+stats_begin_time = time.perf_counter()
 full_stats = model.get_full_statistics()
+stats_end_time = time.perf_counter()
+print(f'Statistics collection time: {stats_end_time - stats_begin_time}s')
 # TODO (mahi): save the full statistics.

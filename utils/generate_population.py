@@ -46,7 +46,6 @@ class PopulationEngine:
         exist, create and cache that data.
         """
         if os.path.exists(self.people_loc) and os.path.exists(self.households_loc):
-            print (self.file_loc)
             self.people = pd.read_csv(self.people_loc)
             self.households = pd.read_csv(self.households_loc, 
                 converters={'members': lambda x: [int(j) for j in x[1:-1]\
