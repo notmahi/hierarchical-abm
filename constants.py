@@ -28,6 +28,12 @@ GENDER_FACTOR = 7.  # how likely it is for people of same gender
                     # successful contact (compared to contact between
                     # people of different genders)
 
+TRIP_PROBABILITY_BY_DISTANCE = {1 : 1/7,        # This dictionary contains the probability
+                                2 : 1/14,       # of an agent making a trip from a given
+                                3 : 1/30,       # environment E at distance i from the lowest
+                                4 : 1/90,       # level env to the super env of E
+                                5 : 1/180}
+
 # Here goes all the transition functions, what is a probability of an agent
 # visiting and migrating to another node?
 

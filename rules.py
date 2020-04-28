@@ -8,13 +8,33 @@ later, and so that we can add more parameters to agent behavior easily.
 
 import numpy as np
 from typing import List
-from constants import STATES, T_INC, T_INF_MILD, T_INF_WILD, T_INF_WILD, PROB_MILD, age_to_age_group, CONTACT_MATRIX, GENDER_FACTOR
+from constants import (STATES, 
+                       T_INC, T_INF_MILD, T_INF_WILD, T_INF_WILD, 
+                       PROB_MILD, 
+                       age_to_age_group, 
+                       CONTACT_MATRIX, 
+                       GENDER_FACTOR, 
+                       TRIP_PROBABILITY_BY_DISTANCE)
 from enum import Enum
 
 class AgentRules:
     @staticmethod
     def nodes_to_visit(agent):
-        pass
+        current_node = agent.model
+
+        visited_nodes = []
+        tree_distance = 0
+        while current_node is not None:
+            next_node = current_node.superenvs
+            trip_indicator = np.random.random_sample()
+
+            if tree_distance > 0 and (trip_indicator > TRIP_PROBABILITY_BY_DISTANCE[tree_distance]):
+                visited_nodes.append(next_node)
+            current_node = next_node
+
+            tree_distance += 1
+
+        return visited_nodes
 
     @staticmethod
     def family_to_migrate_to(agent):
