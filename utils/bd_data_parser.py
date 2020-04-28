@@ -41,6 +41,8 @@ def extract_household_stats(row):
     N = row[TOTAL_HOUSEHOLDS_COLUMN]
     household_sizes = list((N * household_nums + 0.5).astype('int32'))
     household_sizes[0] += row[FLOATING_POPULATION]
+    if sum(household_sizes) == 0:
+        household_sizes[-1] = 1
     return household_sizes
 
 

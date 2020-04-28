@@ -46,9 +46,12 @@ class PopulationEngine:
         exist, create and cache that data.
         """
         if os.path.exists(self.people_loc) and os.path.exists(self.households_loc):
+            print (self.file_loc)
             self.people = pd.read_csv(self.people_loc)
             self.households = pd.read_csv(self.households_loc, 
-                converters={'members': lambda x: [int(j) for j in x[1:-1].split(',')]})
+                converters={'members': lambda x: [int(j) for j in x[1:-1]\
+                                                        .replace(" ", "")\
+                                                        .split(',') if j]})
         else:
             # The cached files don't exist, so we try to generate the data.
             self._preprocess_data()
@@ -247,6 +250,8 @@ class PopulationEngine:
         # 3. Unmarried adults/everyone else
         for i, idx in enumerate(households.loc[households.free > 0].index):
             # Kids have to be at least 16 years younger than their mother
+            if not households.loc[idx].members:
+                continue # Don't add kids to families with no parents yet
             mom_age = min(people.loc[households.loc[idx].members].age)
             eligible_kids = people.loc[((people.hh_id == -1) & 
                                         (people.partner == people.index) &
@@ -285,7 +290,7 @@ class PopulationEngine:
         # people are left.
         for people_id in people.loc[people.hh_id == -1].index:
             # Household where there is space, or household where there is n+ people
-            free_households = households.loc[(households.free > 0) | (households.size == household_stats[-1])]
+            free_households = households.loc[(households.free > 0) | (households['size'] == household_stats[-1])]
             if free_households.empty:
                 # No free household! Just choose a random one from the 8+ set
                 household_to_assign_to = np_random.choice(households.index)
