@@ -18,6 +18,7 @@ HOUSEHOLD_COLUMNS = ['household_1person', 'household_2person',
                      'household_5person', 'household_6person', 
                      'household_7person', 'household_8+person']
 TOTAL_HOUSEHOLDS_COLUMN = 'num_general_household'
+FLOATING_POPULATION = 'pop_floating'
 
 BD_MARRIAGE_DATA_FILE = '../data_files/marriage_data_bd.csv'
 BD_GENDER_RATIO_FILE = '../data_files/bangladesh_population_pyramid_adjusted.csv'
@@ -38,7 +39,11 @@ def extract_household_stats(row):
     """
     household_nums = row[HOUSEHOLD_COLUMNS] / 100. # convert from %
     N = row[TOTAL_HOUSEHOLDS_COLUMN]
-    return list((N * household_nums).astype('int32'))
+    household_sizes = list((N * household_nums + 0.5).astype('int32'))
+    household_sizes[0] += row[FLOATING_POPULATION]
+    if sum(household_sizes) == 0:
+        household_sizes[-1] = 1
+    return household_sizes
 
 
 def get_marriage_statistics():

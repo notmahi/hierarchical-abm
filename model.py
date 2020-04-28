@@ -14,8 +14,7 @@ import numpy as np
 from mesa import Agent, Model
 from rules import AgentRules, DiseaseRules
 from constants import *
-from utils.generate_population import (generate_households_and_people, 
-                                       preprocess_data)
+from utils.generate_population import PopulationEngine
 
 class Person(Agent):
     """
@@ -312,19 +311,14 @@ class LowestLevelEnv(EnvironmentModel):
         """
         population = hierarchy_data_row['pop_total']
         area = hierarchy_data_row['area']
-        (age_ranges, age_probabilities, 
-         household_counts, household_incomes) = preprocess_data(hierarchy_data_row)
         # Now, we must get use the population generation methods to fill in and
         # create households and agents, populate the agents in the FamilyEnv
         # and return the results.
 
+        population_engine = PopulationEngine(hierarchy_data_row, seed=12)
         # TODO (mahi): The following will break if the data schema changes, so
         # make sure the schema is the same in real data, or make changes there.
-        households, people = generate_households_and_people(population, 
-                                                            age_ranges, 
-                                                            age_probabilities, 
-                                                            household_counts, 
-                                                            household_incomes)
+        people, households = population_engine.get_people_and_households()
         
         families = []
         for household in households.itertuples():
