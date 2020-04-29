@@ -19,20 +19,36 @@ from enum import Enum
 
 class AgentRules:
     @staticmethod
+    def get_trip_probability(agent, source, destination):
+        """
+        Outputs the probability fo a given agent making a trip from a source node to a destination node.
+        agent       - The agent who will make (or not make the trip)
+        source      - The source node from where the agent will make (or not make) the trip
+        destination - The destination to where the agent will make (or not make) the trip
+        """
+        assert source.superenvs == destination
+        if agent.model == source or agent.model.superenvs == destination:
+            return -1
+
+        current_node = agent.model
+        distance_from_lowest_level = -1
+        
+        while current_node != source:
+            current_node = current_node.superenvs
+            distance_from_lowest_level += 1
+
+        return TRIP_PROBABILITY_BY_DISTANCE[distance_from_lowest_level]
+
+    @staticmethod
     def nodes_to_visit(agent):
         current_node = agent.model
 
         visited_nodes = []
-        tree_distance = 0
         while current_node is not None:
             next_node = current_node.superenvs
-            trip_indicator = np.random.random_sample()
-
-            if tree_distance > 0 and (trip_indicator > TRIP_PROBABILITY_BY_DISTANCE[tree_distance]):
+            if np.random.random_sample() <= AgentRules.get_trip_probability(agent, current_node, next_node):
                 visited_nodes.append(next_node)
             current_node = next_node
-
-            tree_distance += 1
 
         return visited_nodes
 
