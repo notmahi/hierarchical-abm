@@ -97,6 +97,8 @@ for t in range(T):
     loop_begin_time = time.perf_counter()
     model.step()
     summary_stats = model.get_summary_statistics()
+    # For now, just print the summary stats
+    print(summary_stats)
     loop_end_time = time.perf_counter()
     print(f'Ran {t} loops, time: {loop_end_time - loop_begin_time}s')
     # TODO (mahi): save the summary stats

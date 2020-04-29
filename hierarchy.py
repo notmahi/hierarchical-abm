@@ -6,6 +6,7 @@ hierarchical ABM model. The API design has been inspired by PyTorch's sequential
 model building.
 """
 
+import numpy as np
 import pandas as pd
 
 from collections import deque
