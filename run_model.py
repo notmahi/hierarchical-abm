@@ -56,6 +56,7 @@ level_hierarchy = None
 tree_data = pd.read_csv(args.nodes_data).set_index('node_hash')
 with open(args.hierarchy_tree, 'r') as f:
     tree_dict = json.load(f)
+
 contact_matrix = pd.read_csv(args.contact_matrix).to_numpy()
 loading_data_files = time.perf_counter()
 print(f'Loaded data files, {loading_data_files - begin} seconds.')
@@ -83,8 +84,9 @@ print(f'Loaded tree, {loading_tree - loading_data_files} seconds.')
 
 # Step 3: Seed the simulation, initialize the disease state in some individuals.
 # TODO: (figure out model seeding parameters)
-seed_params = None
-model.seed(seed_params)
+seed_params = 1.71e-5
+total_exposed = model.seed(seed_params)
+print(f'Total exposed in seed: {total_exposed}')
 seeding_time = time.perf_counter()
 print(f'Seeded tree, {seeding_time - loading_tree} seconds.')
 

@@ -75,7 +75,7 @@ class HierarchicalModel(EnvironmentModel):
                 process_queue.append((subnode, 
                                       self.hierarchy_models[subnode.node_level], 
                                       env))
-                                    
+        del self.hierarchy_data
         return final_model
 
     def step(self):
@@ -141,4 +141,13 @@ class HierarchicalModel(EnvironmentModel):
         return pd.DataFrame.from_dict(self._long_summary)
 
     def seed(self, seed_params):
-        pass
+        """
+        Simple strategy of exposing everyone with prob seed_params
+        """
+        seed_count = 0
+        for (uuid, person) in self._people:
+            if np.random.random() <= seed_params:
+                person.state = STATES.E
+                seed_count += 1
+        return seed_count
+        
