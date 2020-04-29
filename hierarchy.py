@@ -6,9 +6,12 @@ hierarchical ABM model. The API design has been inspired by PyTorch's sequential
 model building.
 """
 
+import pandas as pd
+
 from collections import deque
 from functools import partial
 
+from constants import STATES
 from data import HierarchicalDataTree
 from model import EnvironmentModel
 from simulation import simulate
@@ -32,9 +35,13 @@ class HierarchicalModel(EnvironmentModel):
         self._people = {}
         self._envs = {}
         
+        # To keep track of time
+        self._time = 0
+        self._short_summary = {}
+        self._long_summary = {}
+
         self._verify()
         self.final_model = self._build()
-
 
     def _verify(self):
         assert isinstance(self.hierarchy_data, HierarchicalDataTree)
@@ -82,6 +89,8 @@ class HierarchicalModel(EnvironmentModel):
         # self.final_model.step()
         # Instead, we run the steps in loops
 
+        for state in STATES:
+            self._short_summary[state] = 0
         # First, we take steps for every person, which is populating the 
         # ABM hierarchy tree based on what they visited that day.
         # TODO (tmoon): parallelize
@@ -98,20 +107,28 @@ class HierarchicalModel(EnvironmentModel):
         # individual's disease progression.
         # TODO (tmoon): parallelize
         for (uuid, person) in self._people.items():
-            person.process_contacts_and_update_disease_state()
+            old_state = person.state
+            state_today = person.process_contacts_and_update_disease_state()
+            self._short_summary[state_today] += 1
+            if old_state != state_today:
+                self._long_summary[uuid][state_today] = self._time
 
+        # time goes up by 1
+        self._time += 1
 
     def register_person(self, person):
         """
         Function to register the population of the hierarchy
         """
         self._people[person.uid] = person
+        self._long_summary[person.uid] = {}
 
     def get_summary_statistics(self):
         """
         Get summary statistic of district-wise disease progression.
+        Summary statistics gets cleared each time step is called.
         """
-        pass
+        return pd.Series(self._short_summary)
 
     def get_full_statistics(self):
         """
@@ -121,7 +138,7 @@ class HierarchicalModel(EnvironmentModel):
         2. Date of state changes.
         3. People that this person spread to.
         """
-        pass
+        return pd.DataFrame.from_dict(self._long_summary)
 
     def seed(self, seed_params):
         pass
