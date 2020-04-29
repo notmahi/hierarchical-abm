@@ -125,6 +125,7 @@ class Person(Agent):
         self.state = DiseaseRules.new_disease_state(self, self.contacts)
         # empty out contacts at the end of the day.
         self.contacts = []
+        return self.state
 
 
 class EnvironmentModel(Model):
