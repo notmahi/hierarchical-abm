@@ -27,11 +27,11 @@ class AgentRules:
         destination - The destination to where the agent will make (or not make) the trip
         """
         assert source.superenvs == destination
-        if agent.model == source or agent.model.superenvs == destination:
-            return -1
+        if agent.model == source:
+            return 1
 
         current_node = agent.model
-        distance_from_lowest_level = -1
+        distance_from_lowest_level = 0
         
         while current_node != source:
             current_node = current_node.superenvs
