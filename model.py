@@ -93,7 +93,7 @@ class Person(Agent):
         nodes_to_visit = AgentRules.nodes_to_visit(self)
         if nodes_to_visit:
             for node in nodes_to_visit:
-                node.register_contact(register_contact)
+                node.register_contact(self)
         
     def possibly_migrate(self):
         """
@@ -158,9 +158,9 @@ class EnvironmentModel(Model):
                                     visited this space in a day and simulate it
                                     based on spatial ABMs.
     """
-    def __init__(self, subenvs, superenvs, population, area, GISmap=None):
+    def __init__(self, subenvs, superenv, population, area, GISmap=None):
         self.subenvs = subenvs
-        self.superenvs = superenvs
+        self.superenv = superenv
         self.population = population
         self.area = area
         self.GISmap = None # Will have to decide how to handle later
