@@ -1,5 +1,6 @@
 # package specific
 utils/population_generation.py
+output
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
