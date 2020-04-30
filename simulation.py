@@ -52,6 +52,9 @@ def simulate_np(agents, node_level, contact_matrix: np.array):
     returns: a dictionary of each person and list of other persons he/she
              came in contact with.
     """
+    if len(agents) == 0:
+        return {}
+
     ages_and_states = np.array([(agent.age, agent.state) for agent in agents])
     ages, states = ages_and_states[:, 0], ages_and_states[:, 1]
     age_groups = age_to_age_group_np(ages).astype('int64')
@@ -67,15 +70,16 @@ def simulate_np(agents, node_level, contact_matrix: np.array):
     can_infect = (states != STATES.S) & (states != STATES.R)
 
     expanded_prob_matrix = prob_i_j[:, age_groups[uninfected]]
-    expanded_prob_matrix = expanded_prob_matrix[age_groups[can_infect], :]
+    # expanded_prob_matrix = expanded_prob_matrix[age_groups[can_infect], :]
+    can_infect_count = np.array([(can_infect == i).sum() for i in range(len(AGE_GROUPS))])
 
     # Now, random contact sampling
-    contacts = np.random.binomial(1, expanded_prob_matrix)
+    contact_summary = np.random.binomial(can_infect_count[:, np.newaxis], expanded_prob_matrix)
 
     # 0 means there has not been a contact, otherwise contact has been the value
-    # -1 age group
-    age_group_stats = contacts * (np.expand_dims(age_groups[can_infect], axis=1) + 1)
-    contact_summary = np.vstack([(age_group_stats == i).sum(axis=0) for i in range(1, len(AGE_GROUPS) + 1)])
+    # # -1 age group
+    # age_group_stats = contacts * (np.expand_dims(age_groups[can_infect], axis=1) + 1)
+    # contact_summary = np.vstack([(age_group_stats == i).sum(axis=0) for i in range(1, len(AGE_GROUPS) + 1)])
 
     counter = 0 # Since we only care about contacts of non-sick people
     result = {}
