@@ -49,29 +49,30 @@ class Person(Agent):
         # Every agent starts off in the susceptible state, unless defined
         self.state = state or STATES.S
         self.is_urban = is_urban
-        self.model = model
 
         self.uid = uuid.uuid4()
 
         # Keeping track of the contacts that 
         self.contacts = np.zeros(len(AGE_GROUPS))
 
-    def set_model(self, model):
+    def set_model(self, model, optimize_memory=True):
         """
         Helper function for setting a person's model (aka a family) and 
         computing the hierarchy tree.
         """
         if self.model is None:
             self.model = model
-        # To simplify computation, this is the hierarchy tree this model is a
-        # part of
-        self.hierarchy_tree = [self.model]
-        model_now = self.model
-        while model_now.superenv is not None:
-            # Build out the whole hierarchy so we can tell where this particular
-            # agent is located
-            self.hierarchy_tree.append(model_now.superenv)
-            model_now = model_now.superenv
+
+        if not optimize_memory:
+            # To simplify computation, this is the hierarchy tree this model is a
+            # part of
+            self.hierarchy_tree = [self.model]
+            model_now = self.model
+            while model_now.superenv is not None:
+                # Build out the whole hierarchy so we can tell where this particular
+                # agent is located
+                self.hierarchy_tree.append(model_now.superenv)
+                model_now = model_now.superenv
 
     def step(self):
         """
