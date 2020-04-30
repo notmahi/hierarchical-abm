@@ -61,6 +61,7 @@ def simulate_np(agents, node_level, contact_matrix: np.array):
     # We only care about agents who has state S.
     # This is the probability that j touches i.
     prob_i_j = contact_matrix / (1e-9 + DEPTH_OF_TREE * trip_probability * np.expand_dims(total_of_age_group, axis=1))
+    prob_i_j = np.nan_to_num(prob_i_j).clip(0, 1) # TODO (mahi): speedhack, fix
     # Now, expand out the contact probability matrix
     uninfected = (states == STATES.S)
     can_infect = (states != STATES.S) & (states != STATES.R)
