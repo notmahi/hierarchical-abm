@@ -70,7 +70,7 @@ def simulate_np(agents, node_level, contact_matrix: np.array):
     can_infect = (states != STATES.S) & (states != STATES.R)
 
     expanded_prob_matrix = prob_i_j[:, age_groups[uninfected]]
-    can_infect_count = np.array([(can_infect == i).sum() for i in range(len(AGE_GROUPS))])
+    can_infect_count = np.array([(age_groups[can_infect] == i).sum() for i in range(len(AGE_GROUPS))])
 
     # Now, random contact sampling
     contact_summary = np.random.binomial(can_infect_count[:, np.newaxis], expanded_prob_matrix)
