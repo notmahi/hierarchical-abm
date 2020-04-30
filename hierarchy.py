@@ -12,10 +12,10 @@ import pandas as pd
 from collections import deque
 from functools import partial
 
-from constants import STATES
+from constants import STATES, DEPTH_OF_TREE
 from data import HierarchicalDataTree
 from model import EnvironmentModel
-from simulation import simulate
+from simulation import simulate_np
 
 class HierarchicalModel(EnvironmentModel):
     """
@@ -30,8 +30,9 @@ class HierarchicalModel(EnvironmentModel):
     def __init__(self, hierarchy_data, hierarchy_models, contact_matrix):
         self.hierarchy_models = hierarchy_models
         self.hierarchy_data = hierarchy_data
-        self.contact_matrix = contact_matrix
-        self.contact_simulation = partial(simulate, contact_matrix=contact_matrix)
+        # Symmetrize
+        self.contact_matrix = (contact_matrix + contact_matrix.T) / 2
+        self.contact_simulation = partial(simulate_np, contact_matrix=contact_matrix)
         # These are the large structures to keep track of all envs and people
         self._people = {}
         self._envs = {}
@@ -77,6 +78,7 @@ class HierarchicalModel(EnvironmentModel):
                                       self.hierarchy_models[subnode.node_level], 
                                       env))
         del self.hierarchy_data
+        print(len(self._envs))
         return final_model
 
     def step(self):
@@ -146,7 +148,7 @@ class HierarchicalModel(EnvironmentModel):
         Simple strategy of exposing everyone with prob seed_params
         """
         seed_count = 0
-        for (uuid, person) in self._people:
+        for (uuid, person) in self._people.items():
             if np.random.random() <= seed_params:
                 person.state = STATES.E
                 seed_count += 1

@@ -54,7 +54,7 @@ class Person(Agent):
         self.uid = uuid.uuid4()
 
         # Keeping track of the contacts that 
-        self.contacts = []
+        self.contacts = np.zeros(len(AGE_GROUPS))
 
     def set_model(self, model):
         """
@@ -115,7 +115,7 @@ class Person(Agent):
         Given a list of contacts a person had in a day in some environment, 
         update the agents' contact list.
         """
-        self.contacts.extend(contacts)
+        self.contacts += contacts
 
     def process_contacts_and_update_disease_state(self):
         """
@@ -124,7 +124,7 @@ class Person(Agent):
         """
         self.state = DiseaseRules.new_disease_state(self, self.contacts)
         # empty out contacts at the end of the day.
-        self.contacts = []
+        self.contacts = self.contacts * 0
         return self.state
 
 
@@ -244,7 +244,7 @@ class EnvironmentModel(Model):
         """
         # raise NotImplementedError('You must define subenvironment steps.')
         # Step 1: simulate a round of contacts.
-        people_contacts = contact_simulation(list(self.visits))
+        people_contacts = contact_simulation(list(self.visits), self.node_level)
         # Step 2: register that round of contacts with the people.
         for (person, contacts) in people_contacts.items():
             person.register_contacts(contacts)

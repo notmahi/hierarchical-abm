@@ -26,30 +26,30 @@ class AgentRules:
         source      - The source node from where the agent will make (or not make) the trip
         destination - The destination to where the agent will make (or not make) the trip
         """
-        assert source.superenvs == destination
-        if agent.model == source or agent.model.superenvs == destination:
+        assert source.superenv == destination
+        if agent.model == source or agent.model.superenv == destination:
             return -1
 
         current_node = agent.model
         distance_from_lowest_level = -1
         
         while current_node != source:
-            current_node = current_node.superenvs
+            current_node = current_node.superenv
             distance_from_lowest_level += 1
 
-        return TRIP_PROBABILITY_BY_DISTANCE[distance_from_lowest_level]
+        return TRIP_PROBABILITY_BY_DISTANCE[source.node_level]
 
     @staticmethod
     def nodes_to_visit(agent):
-        current_node = agent.model
+        current_node = agent.model.superenv
 
         visited_nodes = []
+        assert current_node is not None
         while current_node is not None:
-            next_node = current_node.superenvs
-            if np.random.random_sample() <= AgentRules.get_trip_probability(agent, current_node, next_node):
-                visited_nodes.append(next_node)
+            next_node = current_node.superenv
+            if np.random.random_sample() <= TRIP_PROBABILITY_BY_DISTANCE[current_node.node_level]:
+                visited_nodes.append(current_node)
             current_node = next_node
-
         return visited_nodes
 
     @staticmethod
@@ -76,18 +76,14 @@ class DiseaseRules:
         if agent.state == STATES.S:
             # for each infected person agent meets
             # chances of getting infected depends on contact rate for the person
-            risk = 0
-            id1 = age_to_age_group(agent.age)
-            for person in contacts:
-                id2 = age_to_age_group(person.age)
-                # normalized contact rate
-                contact_rate = CONTACT_MATRIX[id1][id2] # contact rate
-                # if agent and person are of same gender then they have higher chance of getting infected
-                if agent.gender == person.gender:
-                    contact_rate *= GENDER_FACTOR
-                risk += contact_rate
-            # now decide if the agent got infected with a single coin flip
-            if np.random.uniform(0, 1) <= 1-np.exp(-risk):
+            # F u a h
+            # For now, assume contact_matrix[id] is my prob of getting covid
+            # from age group id
+            # TODO (mahi): Fix this to get a real probability
+            prob_getting = CONTACT_MATRIX[age_to_age_group(agent.age)] / CONTACT_MATRIX[age_to_age_group(agent.age)].sum()
+            final_prob = 1 - np.prod((1 - prob_getting) ** contacts)
+
+            if np.random.uniform(0, 1) <= final_prob:
                 return STATES.E
             else:
                 return STATES.S
