@@ -17,10 +17,6 @@ from hierarchy import HierarchicalModel
 from data import HierarchicalDataTree
 from bd_envs import *
 
-# Memory allocation test
-import tracemalloc
-
-tracemalloc.start()
 
 """
 TODO (mahi): This is placeholder code since we do not have the data yet. But we
@@ -50,8 +46,15 @@ optional.add_argument('--age_pyramid', type=str, default='data_files/bangladesh\
     _population_pyramid_2017.csv', help='Relative path for age pyramid.')
 optional.add_argument('--marriage_data', type=str, default='data_files/marriage\
     _data_bd.csv', help='Age-wise marriage data for population generation.')
-
+optional.add_argument('--memory_trace', type=int, default=0,
+    help='Get top k memory consuming lines (0 means no trace)')
 args = parser.parse_args()
+
+# Memory allocation test
+if args.memory_trace != 0:
+    import tracemalloc
+    tracemalloc.start()
+
 
 # Step 1: Parse the data into two forms: a nested dict for the tree structure
 #         and a dataframe for the node-level statistics
@@ -124,9 +127,10 @@ stats_end_time = time.perf_counter()
 print(f'Statistics collection time: {stats_end_time - stats_begin_time}s')
 # TODO (mahi): save the full statistics.
 
-snapshot = tracemalloc.take_snapshot()
-top_stats = snapshot.statistics('lineno')
+if args.memory_trace != 0:
+    snapshot = tracemalloc.take_snapshot()
+    top_stats = snapshot.statistics('lineno')
 
-print("[ Top 10 ]")
-for stat in top_stats[:10]:
-    print(stat)
+    print(f"[ Top {args.memory_trace} ]")
+    for stat in top_stats[:args.memory_trace]:
+        print(stat)

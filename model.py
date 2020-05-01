@@ -49,10 +49,11 @@ class Person:
         self.state = state or STATES.S
         self.is_urban = is_urban
 
-        self.uid = uuid.uuid4()
+        self.uid = None
 
         # Keeping track of the contacts that 
-        self.contacts = np.zeros(len(AGE_GROUPS))
+        # If someone is having more than 65k contacts in a day something is wrong
+        self.contacts = np.zeros(len(AGE_GROUPS), dtype=np.uint16)
 
     def set_model(self, model, optimize_memory=True):
         """
@@ -172,6 +173,7 @@ class EnvironmentModel:
         self.node_level = None
         self.node_hash = None
         self.is_main_node = False
+        self.uid = None
 
     def step(self, contact_simulation):
         """ 

@@ -57,7 +57,7 @@ def simulate_np(agents, node_level, contact_matrix: np.array):
 
     ages_and_states = np.array([(agent.age, agent.state) for agent in agents])
     ages, states = ages_and_states[:, 0], ages_and_states[:, 1]
-    age_groups = age_to_age_group_np(ages).astype('int64')
+    age_groups = age_to_age_group_np(ages).astype(np.uint8)
 
     trip_probability = TRIP_PROBABILITY_BY_DISTANCE[node_level]
     total_of_age_group = np.array([(age_groups == i).sum() for i in range(len(AGE_GROUPS))])
@@ -79,7 +79,7 @@ def simulate_np(agents, node_level, contact_matrix: np.array):
     result = {}
     for agent in agents:
         if agent.state == STATES.S:
-            result[agent] = contact_summary[:, counter]
+            result[agent] = contact_summary[:, counter].astype(np.uint16)
             counter += 1
 
     return result
