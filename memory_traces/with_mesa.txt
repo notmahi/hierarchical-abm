@@ -1,0 +1,87 @@
+Loaded data files, 0.03891390000353567 seconds.
+6
+Loaded tree, 4.10831760000292 seconds.
+Total exposed in seed: 0
+Seeded tree, 0.008147299995471258 seconds.
+States.S         9515
+States.E            0
+States.I_mild       0
+States.I_wild       0
+States.R            0
+dtype: int64
+Ran 0 loops, time: 0.9843907000031322s
+States.S         9515
+States.E            0
+States.I_mild       0
+States.I_wild       0
+States.R            0
+dtype: int64
+Ran 1 loops, time: 0.9384436999971513s
+States.S         9515
+States.E            0
+States.I_mild       0
+States.I_wild       0
+States.R            0
+dtype: int64
+Ran 2 loops, time: 1.0834993999960716s
+States.S         9515
+States.E            0
+States.I_mild       0
+States.I_wild       0
+States.R            0
+dtype: int64
+Ran 3 loops, time: 1.0996477000007872s
+States.S         9515
+States.E            0
+States.I_mild       0
+States.I_wild       0
+States.R            0
+dtype: int64
+Ran 4 loops, time: 0.9179158999977517s
+States.S         9515
+States.E            0
+States.I_mild       0
+States.I_wild       0
+States.R            0
+dtype: int64
+Ran 5 loops, time: 0.9236664000054589s
+States.S         9515
+States.E            0
+States.I_mild       0
+States.I_wild       0
+States.R            0
+dtype: int64
+Ran 6 loops, time: 0.9176164999953471s
+States.S         9515
+States.E            0
+States.I_mild       0
+States.I_wild       0
+States.R            0
+dtype: int64
+Ran 7 loops, time: 0.9650507000042126s
+States.S         9515
+States.E            0
+States.I_mild       0
+States.I_wild       0
+States.R            0
+dtype: int64
+Ran 8 loops, time: 1.1561435999974492s
+States.S         9515
+States.E            0
+States.I_mild       0
+States.I_wild       0
+States.R            0
+dtype: int64
+Ran 9 loops, time: 1.199669300003734s
+Statistics collection time: 0.9353488999986439s
+[ Top 10 ]
+/home/mahi/.local/share/virtualenvs/hierarchical-abm-YcVZKhdv/lib/python3.8/site-packages/mesa/model.py:22: size=4940 KiB, count=1982, average=2552 B
+/mnt/d/projects/hierarchical-abm/model.py:43: size=1338 KiB, count=19029, average=72 B
+/mnt/d/projects/hierarchical-abm/model.py:56: size=1189 KiB, count=9513, average=128 B
+/mnt/d/projects/hierarchical-abm/hierarchy.py:127: size=883 KiB, count=9515, average=95 B
+/home/mahi/.local/share/virtualenvs/hierarchical-abm-YcVZKhdv/lib/python3.8/site-packages/pandas/core/internals/blocks.py:698: size=760 KiB, count=8, average=95.0 KiB
+/mnt/d/projects/hierarchical-abm/model.py:128: size=743 KiB, count=9515, average=80 B
+/home/mahi/.local/share/virtualenvs/hierarchical-abm-YcVZKhdv/lib/python3.8/site-packages/pandas/io/parsers.py:2037: size=633 KiB, count=10795, average=60 B
+/mnt/d/projects/conda/lib/python3.8/uuid.py:780: size=520 KiB, count=9515, average=56 B
+/home/mahi/.local/share/virtualenvs/hierarchical-abm-YcVZKhdv/lib/python3.8/site-packages/mesa/model.py:19: size=495 KiB, count=5939, average=85 B
+/mnt/d/projects/hierarchical-abm/model.py:331: size=446 KiB, count=9516, average=48 B

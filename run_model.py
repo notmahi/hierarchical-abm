@@ -17,6 +17,11 @@ from hierarchy import HierarchicalModel
 from data import HierarchicalDataTree
 from bd_envs import *
 
+# Memory allocation test
+import tracemalloc
+
+tracemalloc.start()
+
 """
 TODO (mahi): This is placeholder code since we do not have the data yet. But we
 are trying to create approximately what the information may look like.
@@ -118,3 +123,10 @@ stats_end_time = time.perf_counter()
 
 print(f'Statistics collection time: {stats_end_time - stats_begin_time}s')
 # TODO (mahi): save the full statistics.
+
+snapshot = tracemalloc.take_snapshot()
+top_stats = snapshot.statistics('lineno')
+
+print("[ Top 10 ]")
+for stat in top_stats[:10]:
+    print(stat)

@@ -11,12 +11,11 @@ level.
 
 import uuid
 import numpy as np
-from mesa import Agent, Model
 from rules import AgentRules, DiseaseRules
 from constants import *
 from utils.generate_population import PopulationEngine
 
-class Person(Agent):
+class Person:
     """
     The simplest iteration of a person. Basically, this agent shall have all the
     characteristics of the singular person defined, based on which our model 
@@ -129,7 +128,7 @@ class Person(Agent):
         return self.state
 
 
-class EnvironmentModel(Model):
+class EnvironmentModel:
     """
     This is simply an abstract class which will encode all the hierarchies in
     the model. In a simplified way, we can think of an environment model as a 
