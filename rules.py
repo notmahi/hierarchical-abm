@@ -31,7 +31,7 @@ class AgentRules:
             return -1
 
         current_node = agent.model
-        distance_from_lowest_level = -1
+        distance_from_lowest_level = 0
         
         while current_node != source:
             current_node = current_node.superenv
