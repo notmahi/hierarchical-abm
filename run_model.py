@@ -8,7 +8,7 @@ aggregating the data at the necessary level.
 
 import argparse
 import json
-
+import os
 import time
 
 import pandas as pd
@@ -56,7 +56,8 @@ level_hierarchy = None
 tree_data = pd.read_csv(args.nodes_data).set_index('node_hash')
 with open(args.hierarchy_tree, 'r') as f:
     tree_dict = json.load(f)
-contact_matrix = pd.read_csv(args.contact_matrix).to_numpy()
+
+contact_matrix = pd.read_csv(args.contact_matrix).set_index('Age group').to_numpy()
 loading_data_files = time.perf_counter()
 print(f'Loaded data files, {loading_data_files - begin} seconds.')
 
@@ -83,8 +84,9 @@ print(f'Loaded tree, {loading_tree - loading_data_files} seconds.')
 
 # Step 3: Seed the simulation, initialize the disease state in some individuals.
 # TODO: (figure out model seeding parameters)
-seed_params = None
-model.seed(seed_params)
+seed_params = 1.71e-5
+total_exposed = model.seed(seed_params)
+print(f'Total exposed in seed: {total_exposed}')
 seeding_time = time.perf_counter()
 print(f'Seeded tree, {seeding_time - loading_tree} seconds.')
 
@@ -95,6 +97,10 @@ for t in range(T):
     loop_begin_time = time.perf_counter()
     model.step()
     summary_stats = model.get_summary_statistics()
+    # For now, just print the summary stats
+    print(summary_stats)
+    summary_fname = os.path.join(args.out_dir, f'summary_{t}.csv')
+    summary_stats.to_csv(summary_fname)
     loop_end_time = time.perf_counter()
     print(f'Ran {t} loops, time: {loop_end_time - loop_begin_time}s')
     # TODO (mahi): save the summary stats
@@ -104,6 +110,11 @@ for t in range(T):
 
 stats_begin_time = time.perf_counter()
 full_stats = model.get_full_statistics()
+
+full_stats_fname = os.path.join(args.out_dir, f'full_stats_{t}.csv')
+full_stats.to_csv(full_stats_fname)
+
 stats_end_time = time.perf_counter()
+
 print(f'Statistics collection time: {stats_end_time - stats_begin_time}s')
 # TODO (mahi): save the full statistics.

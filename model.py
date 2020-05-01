@@ -49,29 +49,30 @@ class Person(Agent):
         # Every agent starts off in the susceptible state, unless defined
         self.state = state or STATES.S
         self.is_urban = is_urban
-        self.model = model
 
         self.uid = uuid.uuid4()
 
         # Keeping track of the contacts that 
-        self.contacts = []
+        self.contacts = np.zeros(len(AGE_GROUPS))
 
-    def set_model(self, model):
+    def set_model(self, model, optimize_memory=True):
         """
         Helper function for setting a person's model (aka a family) and 
         computing the hierarchy tree.
         """
         if self.model is None:
             self.model = model
-        # To simplify computation, this is the hierarchy tree this model is a
-        # part of
-        self.hierarchy_tree = [self.model]
-        model_now = self.model
-        while model_now.superenv is not None:
-            # Build out the whole hierarchy so we can tell where this particular
-            # agent is located
-            self.hierarchy_tree.append(model_now.superenv)
-            model_now = model_now.superenv
+
+        if not optimize_memory:
+            # To simplify computation, this is the hierarchy tree this model is a
+            # part of
+            self.hierarchy_tree = [self.model]
+            model_now = self.model
+            while model_now.superenv is not None:
+                # Build out the whole hierarchy so we can tell where this particular
+                # agent is located
+                self.hierarchy_tree.append(model_now.superenv)
+                model_now = model_now.superenv
 
     def step(self):
         """
@@ -93,7 +94,7 @@ class Person(Agent):
         nodes_to_visit = AgentRules.nodes_to_visit(self)
         if nodes_to_visit:
             for node in nodes_to_visit:
-                node.register_contact(register_contact)
+                node.register_contact(self)
         
     def possibly_migrate(self):
         """
@@ -115,7 +116,7 @@ class Person(Agent):
         Given a list of contacts a person had in a day in some environment, 
         update the agents' contact list.
         """
-        self.contacts.extend(contacts)
+        self.contacts += contacts
 
     def process_contacts_and_update_disease_state(self):
         """
@@ -124,7 +125,7 @@ class Person(Agent):
         """
         self.state = DiseaseRules.new_disease_state(self, self.contacts)
         # empty out contacts at the end of the day.
-        self.contacts = []
+        self.contacts = self.contacts * 0
         return self.state
 
 
@@ -158,9 +159,9 @@ class EnvironmentModel(Model):
                                     visited this space in a day and simulate it
                                     based on spatial ABMs.
     """
-    def __init__(self, subenvs, superenvs, population, area, GISmap=None):
+    def __init__(self, subenvs, superenv, population, area, GISmap=None):
         self.subenvs = subenvs
-        self.superenvs = superenvs
+        self.superenv = superenv
         self.population = population
         self.area = area
         self.GISmap = None # Will have to decide how to handle later
@@ -244,7 +245,7 @@ class EnvironmentModel(Model):
         """
         # raise NotImplementedError('You must define subenvironment steps.')
         # Step 1: simulate a round of contacts.
-        people_contacts = contact_simulation(list(self.visits))
+        people_contacts = contact_simulation(list(self.visits), self.node_level)
         # Step 2: register that round of contacts with the people.
         for (person, contacts) in people_contacts.items():
             person.register_contacts(contacts)

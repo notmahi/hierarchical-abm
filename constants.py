@@ -13,10 +13,13 @@ FEMALE = 0
 MALE = 1
 
 STATES = Enum('States', 'S E I_mild I_wild R')
-CONTACT_MATRIX = pd.read_csv('data_files/bd_mu_all_loc.csv').to_numpy()
+CONTACT_MATRIX = pd.read_csv('data_files/bd_mu_all_loc.csv').set_index('Age group').to_numpy()
 AGE_GROUPS = [(0, 4), (5, 9), (10, 14), (15, 19), (20, 24), (25, 29),
              (30, 34), (35, 39), (40, 44), (45, 49), (50, 54), (55, 59),
              (60, 64), (65, 69), (70, 74), (75, np.inf)]
+AGE_GROUP_SIZE = 5
+
+DEPTH_OF_TREE = 4 # How many possible meeting places.
 
 T_INC = 2.9         # mean incubation period
 T_INF_MILD = 14     # mean infectious period (mild)
@@ -28,11 +31,17 @@ GENDER_FACTOR = 7.  # how likely it is for people of same gender
                     # successful contact (compared to contact between
                     # people of different genders)
 
-TRIP_PROBABILITY_BY_DISTANCE = {1 : 1/7,        # This dictionary contains the probability
-                                2 : 1/14,       # of an agent making a trip from a given
-                                3 : 1/30,       # environment E at distance i from the lowest
-                                4 : 1/90,       # level env to the super env of E
-                                5 : 1/180}
+# TRIP_PROBABILITY_BY_DISTANCE = {1 : 1/7,        # This dictionary contains the probability
+#                                 2 : 1/14,       # of an agent making a trip from a given
+#                                 3 : 1/30,       # environment E at distance i from the lowest
+#                                 4 : 1/90,       # level env to the super env of E
+#                                 5 : 1/180}
+
+
+TRIP_PROBABILITY_BY_DISTANCE = {3: 0.5,
+                                2: 1/7,
+                                1: 1/14,
+                                0: 1/30}
 
 # Here goes all the transition functions, what is a probability of an agent
 # visiting and migrating to another node?
@@ -46,7 +55,15 @@ def age_to_age_group(age: int) -> int:
             return i
 
 
+def age_to_age_group_np(age: np.array) -> int:
+    """
+    convert age to age group id
+    """
+    return (age//AGE_GROUP_SIZE).clip(0, len(AGE_GROUPS) - 1)
+
+
 def agent_visit_probability(agent):
     """
     Probability of an agent visiting some node to a higher hierarchy
     """
+    pass
