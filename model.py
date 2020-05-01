@@ -9,7 +9,6 @@ must be defined first, then its subregions, and so on, until we reach the person
 level.
 """
 
-import uuid
 import numpy as np
 from rules import AgentRules, DiseaseRules
 from constants import *

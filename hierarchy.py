@@ -115,7 +115,7 @@ class HierarchicalModel(EnvironmentModel):
             state_today = person.process_contacts_and_update_disease_state()
             self._short_summary[state_today] += 1
             if old_state != state_today:
-                self._long_summary[uuid][state_today] = self._time
+                self._long_summary[uid][state_today] = self._time
 
         # time goes up by 1
         self._time += 1
