@@ -9,14 +9,12 @@ must be defined first, then its subregions, and so on, until we reach the person
 level.
 """
 
-import uuid
 import numpy as np
-from mesa import Agent, Model
 from rules import AgentRules, DiseaseRules
 from constants import *
 from utils.generate_population import PopulationEngine
 
-class Person(Agent):
+class Person:
     """
     The simplest iteration of a person. Basically, this agent shall have all the
     characteristics of the singular person defined, based on which our model 
@@ -50,10 +48,11 @@ class Person(Agent):
         self.state = state or STATES.S
         self.is_urban = is_urban
 
-        self.uid = uuid.uuid4()
+        self.uid = None
 
         # Keeping track of the contacts that 
-        self.contacts = np.zeros(len(AGE_GROUPS))
+        # If someone is having more than 65k contacts in a day something is wrong
+        self.contacts = np.zeros(len(AGE_GROUPS), dtype=np.uint16)
 
     def set_model(self, model, optimize_memory=True):
         """
@@ -129,7 +128,7 @@ class Person(Agent):
         return self.state
 
 
-class EnvironmentModel(Model):
+class EnvironmentModel:
     """
     This is simply an abstract class which will encode all the hierarchies in
     the model. In a simplified way, we can think of an environment model as a 
@@ -173,6 +172,7 @@ class EnvironmentModel(Model):
         self.node_level = None
         self.node_hash = None
         self.is_main_node = False
+        self.uid = None
 
     def step(self, contact_simulation):
         """ 

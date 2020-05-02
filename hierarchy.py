@@ -34,13 +34,13 @@ class HierarchicalModel(EnvironmentModel):
         self.contact_matrix = (contact_matrix + contact_matrix.T) / 2
         self.contact_simulation = partial(simulate_np, contact_matrix=contact_matrix)
         # These are the large structures to keep track of all envs and people
-        self._people = {}
-        self._envs = {}
+        self._people = []
+        self._envs = []
         
         # To keep track of time
         self._time = 0
         self._short_summary = {}
-        self._long_summary = {}
+        self._long_summary = []
 
         self._verify()
         self.final_model = self._build()
@@ -68,7 +68,8 @@ class HierarchicalModel(EnvironmentModel):
             env = model_now.from_data(node_now, self.hierarchy_data.tree_data, 
                                       parent, self)
             # attach this env to the hierarchy
-            self._envs[env.node_hash] = env
+            env.uid = len(self._envs)
+            self._envs.append(env)
             if parent is not None:
                 parent.subenvs.append(env)
             else:
@@ -97,24 +98,24 @@ class HierarchicalModel(EnvironmentModel):
         # First, we take steps for every person, which is populating the 
         # ABM hierarchy tree based on what they visited that day.
         # TODO (tmoon): parallelize
-        for (uuid, person) in self._people.items():
+        for (uid, person) in enumerate(self._people):
             person.step()
 
         # Then, once the tree's contacts are populated, run their individual 
         # steps.
         # TODO (tmoon): parallelize
-        for (node_hash, env) in self._envs.items():
+        for (uid, env) in enumerate(self._envs):
             env.step(self.contact_simulation)
 
         # Once the environments have processed the contacts, update the 
         # individual's disease progression.
         # TODO (tmoon): parallelize
-        for (uuid, person) in self._people.items():
+        for (uid, person) in enumerate(self._people):
             old_state = person.state
             state_today = person.process_contacts_and_update_disease_state()
             self._short_summary[state_today] += 1
             if old_state != state_today:
-                self._long_summary[uuid][state_today] = self._time
+                self._long_summary[uid][state_today] = self._time
 
         # time goes up by 1
         self._time += 1
@@ -123,8 +124,9 @@ class HierarchicalModel(EnvironmentModel):
         """
         Function to register the population of the hierarchy
         """
-        self._people[person.uid] = person
-        self._long_summary[person.uid] = {}
+        person.uid = len(self._people)
+        self._people.append(person)
+        self._long_summary.append({})
 
     def get_summary_statistics(self):
         """
@@ -148,7 +150,7 @@ class HierarchicalModel(EnvironmentModel):
         Simple strategy of exposing everyone with prob seed_params
         """
         seed_count = 0
-        for (uuid, person) in self._people.items():
+        for (uid, person) in enumerate(self._people):
             if np.random.random() <= seed_params:
                 person.state = STATES.E
                 seed_count += 1

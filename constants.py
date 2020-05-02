@@ -9,8 +9,8 @@ import pandas as pd
 import numpy as np
 
 # gender is a spectrum lol
-FEMALE = 0
-MALE = 1
+FEMALE = True
+MALE = False
 
 STATES = Enum('States', 'S E I_mild I_wild R')
 CONTACT_MATRIX = pd.read_csv('data_files/bd_mu_all_loc.csv').set_index('Age group').to_numpy()
