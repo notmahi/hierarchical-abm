@@ -3,7 +3,7 @@ import pandas as pd
 from model import Person
 from typing import List, Dict
 from constants import (AGE_GROUPS, age_to_age_group, age_to_age_group_np, 
-                       TRIP_PROBABILITY_BY_DISTANCE, DEPTH_OF_TREE, STATES)
+                       TRIP_PROBABILITY_BY_DISTANCE, DEPTH_OF_TREE, States)
 
 
 def simulate(agents, node_level, contact_matrix: np.array):
@@ -66,8 +66,8 @@ def simulate_np(agents, node_level, contact_matrix: np.array):
     prob_i_j = contact_matrix / (1e-9 + DEPTH_OF_TREE * trip_probability * np.expand_dims(total_of_age_group, axis=1))
     prob_i_j = np.nan_to_num(prob_i_j).clip(0, 1) # TODO (mahi): speedhack, fix
     # Now, expand out the contact probability matrix
-    uninfected = (states == STATES.S)
-    can_infect = (states != STATES.S) & (states != STATES.R)
+    uninfected = (states == States.S)
+    can_infect = (states != States.S) & (states != States.R)
 
     expanded_prob_matrix = prob_i_j[:, age_groups[uninfected]]
     can_infect_count = np.array([(age_groups[can_infect] == i).sum() for i in range(len(AGE_GROUPS))])
@@ -78,7 +78,7 @@ def simulate_np(agents, node_level, contact_matrix: np.array):
     counter = 0 # Since we only care about contacts of non-sick people
     result = {}
     for agent in agents:
-        if agent.state == STATES.S:
+        if agent.state == States.S:
             result[agent] = contact_summary[:, counter].astype(np.uint16)
             counter += 1
 

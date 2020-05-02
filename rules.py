@@ -8,7 +8,7 @@ later, and so that we can add more parameters to agent behavior easily.
 
 import numpy as np
 from typing import List
-from constants import (STATES, 
+from constants import (States, 
                        T_INC, T_INF_MILD, T_INF_WILD, T_INF_WILD, 
                        PROB_MILD, 
                        age_to_age_group, 
@@ -73,7 +73,7 @@ class DiseaseRules:
 
         for simplicity we consider only agent's age and gender
         """
-        if agent.state == STATES.S:
+        if agent.state == States.S:
             # for each infected person agent meets
             # chances of getting infected depends on contact rate for the person
             # F u a h
@@ -84,37 +84,37 @@ class DiseaseRules:
             final_prob = 1 - np.prod((1 - prob_getting) ** contacts)
 
             if np.random.uniform(0, 1) <= final_prob:
-                return STATES.E
+                return States.E
             else:
-                return STATES.S
+                return States.S
 
-        if agent.state == STATES.E:
+        if agent.state == States.E:
             # if a person is already exposed, he/she will either stay exposed
             # or transition to infected regardless of additional contacts
             prob_trans = 1-np.exp(-1/T_INC)
             if np.random.uniform(0, 1) <= prob_trans: # change state
                 if np.random.uniform(0, 1) <= PROB_MILD:
-                    return STATES.I_mild
+                    return States.I_mild
                 else:
-                    return STATES.I_wild
+                    return States.I_wild
             else:
-                return STATES.E
+                return States.E
 
-        if agent.state == STATES.I_mild:
+        if agent.state == States.I_mild:
             # if a person is infected already, he/she can either stay infected
             # or get removed
             prob_trans = 1-np.exp(-1/T_INF_MILD)
             if np.random.uniform(0, 1) <= prob_trans:
-                return STATES.R
+                return States.R
             else:
-                return STATES.I_mild
-        if agent.state == STATES.I_wild:
+                return States.I_mild
+        if agent.state == States.I_wild:
             prob_trans = 1-np.exp(-1/T_INF_WILD)
             if np.random.uniform(0, 1) <= prob_trans:
-                return STATES.R
+                return States.R
             else:
-                return STATES.I_wild
-        if agent.state == STATES.R:
+                return States.I_wild
+        if agent.state == States.R:
             # if a person is removed, he/she is immune to
             # the disease
-            return STATES.R
+            return States.R

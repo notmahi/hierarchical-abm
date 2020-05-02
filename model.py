@@ -45,7 +45,7 @@ class Person:
         # For individual agents this should be their family
         self.model = model
         # Every agent starts off in the susceptible state, unless defined
-        self.state = state or STATES.S
+        self.state = state or States.S
         self.is_urban = is_urban
 
         self.uid = None

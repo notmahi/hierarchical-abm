@@ -12,7 +12,7 @@ import pandas as pd
 from collections import deque
 from functools import partial
 
-from constants import STATES, DEPTH_OF_TREE
+from constants import States, DEPTH_OF_TREE
 from data import HierarchicalDataTree
 from model import EnvironmentModel
 from simulation import simulate_np
@@ -93,7 +93,7 @@ class HierarchicalModel(EnvironmentModel):
         # self.final_model.step()
         # Instead, we run the steps in loops
 
-        for state in STATES:
+        for state in States:
             self._short_summary[state] = 0
         # First, we take steps for every person, which is populating the 
         # ABM hierarchy tree based on what they visited that day.
@@ -152,7 +152,7 @@ class HierarchicalModel(EnvironmentModel):
         seed_count = 0
         for (uid, person) in enumerate(self._people):
             if np.random.random() <= seed_params:
-                person.state = STATES.E
+                person.state = States.E
                 seed_count += 1
         return seed_count
         

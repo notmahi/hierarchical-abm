@@ -7,6 +7,7 @@ aggregating the data at the necessary level.
 """
 
 import argparse
+import dill
 import json
 import os
 import time
@@ -48,6 +49,10 @@ optional.add_argument('--marriage_data', type=str, default='data_files/marriage\
     _data_bd.csv', help='Age-wise marriage data for population generation.')
 optional.add_argument('--memory_trace', type=int, default=0,
     help='Get top k memory consuming lines (0 means no trace)')
+optional.add_argument('--resume', type=str, default='',
+    help='Hierarchical model file to resume from.')
+optional.add_argument('--dump', type=str, default='hierarchical_model_dump/dump.pkl',
+    help='Hierarchical model file to dump to.')
 args = parser.parse_args()
 
 # Memory allocation test
@@ -56,39 +61,50 @@ if args.memory_trace != 0:
     tracemalloc.start()
 
 
-# Step 1: Parse the data into two forms: a nested dict for the tree structure
-#         and a dataframe for the node-level statistics
-# TODO (mahi): Load these from provided data files.
-begin = time.perf_counter()
-level_hierarchy = None
-tree_data = pd.read_csv(args.nodes_data).set_index('node_hash')
-with open(args.hierarchy_tree, 'r') as f:
-    tree_dict = json.load(f)
+# Resume if possible.
+if args.resume != '':
+    with open(args.resume, 'rb') as f:
+        model = dill.load(f)
+    loading_tree = time.perf_counter()
 
-contact_matrix = pd.read_csv(args.contact_matrix).set_index('Age group').to_numpy()
-loading_data_files = time.perf_counter()
-print(f'Loaded data files, {loading_data_files - begin} seconds.')
+else:
+    # Step 1: Parse the data into two forms: a nested dict for the tree structure
+    #         and a dataframe for the node-level statistics
+    # TODO (mahi): Load these from provided data files.
+    begin = time.perf_counter()
+    level_hierarchy = None
+    tree_data = pd.read_csv(args.nodes_data).set_index('node_hash')
+    with open(args.hierarchy_tree, 'r') as f:
+        tree_dict = json.load(f)
 
-# Step 2: Use the parsed data to create a HierarchicalModel which is able to 
-#         run the simulation
+    contact_matrix = pd.read_csv(args.contact_matrix).set_index('Age group').to_numpy()
+    loading_data_files = time.perf_counter()
+    print(f'Loaded data files, {loading_data_files - begin} seconds.')
 
-data_holder = HierarchicalDataTree(tree_dict=tree_dict,
-                                   level_hierarchy=level_hierarchy, 
-                                   tree_data=tree_data)
+    # Step 2: Use the parsed data to create a HierarchicalModel which is able to 
+    #         run the simulation
 
-# Has to be the same order as level_hierarcht
-organizational_levels = (
-    # DivisionEnv,
-    ZillaEnv, 
-    UpazillaEnv,
-    UnionEnv,
-    MahallaEnv,
-    VillageEnv
-)
+    data_holder = HierarchicalDataTree(tree_dict=tree_dict,
+                                    level_hierarchy=level_hierarchy, 
+                                    tree_data=tree_data)
 
-model = HierarchicalModel(data_holder, organizational_levels, contact_matrix)
-loading_tree = time.perf_counter()
-print(f'Loaded tree, {loading_tree - loading_data_files} seconds.')
+    # Has to be the same order as level_hierarcht
+    organizational_levels = (
+        # DivisionEnv,
+        ZillaEnv, 
+        UpazillaEnv,
+        UnionEnv,
+        MahallaEnv,
+        VillageEnv
+    )
+
+    model = HierarchicalModel(data_holder, organizational_levels, contact_matrix)
+    loading_tree = time.perf_counter()
+    print(f'Loaded tree, {loading_tree - loading_data_files} seconds.')
+
+    if args.dump != '':
+        with open(args.dump, 'wb') as f:
+            dill.dump(model, f)
 
 # Step 3: Seed the simulation, initialize the disease state in some individuals.
 # TODO: (figure out model seeding parameters)

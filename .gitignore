@@ -1,6 +1,7 @@
 # package specific
 utils/population_generation.py
 data_files/generated_population
+hierarchical_model_dump
 memory_traces
 output
 
