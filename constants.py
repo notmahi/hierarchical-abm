@@ -19,6 +19,13 @@ AGE_GROUPS = [(0, 4), (5, 9), (10, 14), (15, 19), (20, 24), (25, 29),
              (60, 64), (65, 69), (70, 74), (75, np.inf)]
 AGE_GROUP_SIZE = 5
 
+# Source: https://www.researchgate.net/figure/Average-Daily-Travel-Time-per-Person-by-Age-Group_fig3_245561594
+AGE_TRAVEL_RATIO = np.concatenate((
+    np.array([0.3] * 5),
+    np.repeat(np.array([0.65, 0.82, 0.9, 1., 0.95, 0.85, 0.75, 0.6, 0.3]), 10)
+))
+GENDER_TRAVEL_RATIO = 0.5
+
 DEPTH_OF_TREE = 4 # How many possible meeting places.
 
 T_INC = 2.9         # mean incubation period

@@ -14,7 +14,8 @@ from constants import (States,
                        age_to_age_group, 
                        CONTACT_MATRIX, 
                        GENDER_FACTOR, 
-                       TRIP_PROBABILITY_BY_DISTANCE)
+                       TRIP_PROBABILITY_BY_DISTANCE,
+                       AGE_TRAVEL_RATIO, GENDER_TRAVEL_RATIO, FEMALE)
 from enum import Enum
 
 class AgentRules:
@@ -41,13 +42,16 @@ class AgentRules:
 
     @staticmethod
     def nodes_to_visit(agent):
+        agent_multiplier = AGE_TRAVEL_RATIO[agent.age]
+        if agent.gender == FEMALE:
+            agent_multiplier *= GENDER_TRAVEL_RATIO
         current_node = agent.model.superenv
 
         visited_nodes = []
         assert current_node is not None
         while current_node is not None:
             next_node = current_node.superenv
-            if np.random.random_sample() <= TRIP_PROBABILITY_BY_DISTANCE[current_node.node_level]:
+            if np.random.random_sample() <= (TRIP_PROBABILITY_BY_DISTANCE[current_node.node_level] * agent_multiplier):
                 visited_nodes.append(current_node)
             current_node = next_node
         return visited_nodes
