@@ -53,6 +53,8 @@ optional.add_argument('--resume', type=str, default='',
     help='Hierarchical model file to resume from.')
 optional.add_argument('--dump', type=str, default='hierarchical_model_dump/dump.pkl',
     help='Hierarchical model file to dump to.')
+optional.add_argument('--seed', type=float, default=1.71e-5, help="Seed parameters"
+    "to run this model with")
 args = parser.parse_args()
 
 # Memory allocation test
@@ -108,7 +110,7 @@ else:
 
 # Step 3: Seed the simulation, initialize the disease state in some individuals.
 # TODO: (figure out model seeding parameters)
-seed_params = 1.71e-5
+seed_params = args.seed
 total_exposed = model.seed(seed_params)
 print(f'Total exposed in seed: {total_exposed}')
 seeding_time = time.perf_counter()
