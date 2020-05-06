@@ -15,7 +15,8 @@ from constants import (States,
                        CONTACT_MATRIX, 
                        GENDER_FACTOR, 
                        TRIP_PROBABILITY_BY_DISTANCE,
-                       AGE_TRAVEL_RATIO, GENDER_TRAVEL_RATIO, FEMALE)
+                       AGE_TRAVEL_RATIO, GENDER_TRAVEL_RATIO, FEMALE,
+                       STATE_PENALTY)
 from enum import Enum
 
 class AgentRules:
@@ -42,7 +43,7 @@ class AgentRules:
 
     @staticmethod
     def nodes_to_visit(agent):
-        agent_multiplier = AGE_TRAVEL_RATIO[agent.age]
+        agent_multiplier = AGE_TRAVEL_RATIO[agent.age] * STATE_PENALTY[agent.state]
         if agent.gender == FEMALE:
             agent_multiplier *= GENDER_TRAVEL_RATIO
         current_node = agent.model.superenv

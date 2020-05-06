@@ -57,6 +57,12 @@ def simulate_np(agents, node_level, contact_matrix: np.array):
 
     ages_and_states = np.array([(agent.age, agent.state) for agent in agents])
     ages, states = ages_and_states[:, 0], ages_and_states[:, 1]
+    # Now, expand out the contact probability matrix
+    uninfected = (states == States.S)
+    can_infect = (states == States.I_mild) | (states == States.I_wild)
+    if len(can_infect) == 0:
+        return {}
+
     age_groups = age_to_age_group_np(ages).astype(np.uint8)
 
     trip_probability = TRIP_PROBABILITY_BY_DISTANCE[node_level]
@@ -65,9 +71,6 @@ def simulate_np(agents, node_level, contact_matrix: np.array):
     # This is the probability that j touches i.
     prob_i_j = contact_matrix / (1e-9 + DEPTH_OF_TREE * trip_probability * np.expand_dims(total_of_age_group, axis=1))
     prob_i_j = np.nan_to_num(prob_i_j).clip(0, 1) # TODO (mahi): speedhack, fix
-    # Now, expand out the contact probability matrix
-    uninfected = (states == States.S)
-    can_infect = (states != States.S) & (states != States.R)
 
     expanded_prob_matrix = prob_i_j[:, age_groups[uninfected]]
     can_infect_count = np.array([(age_groups[can_infect] == i).sum() for i in range(len(AGE_GROUPS))])

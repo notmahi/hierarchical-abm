@@ -19,6 +19,14 @@ AGE_GROUPS = [(0, 4), (5, 9), (10, 14), (15, 19), (20, 24), (25, 29),
              (60, 64), (65, 69), (70, 74), (75, np.inf)]
 AGE_GROUP_SIZE = 5
 
+STATE_PENALTY = {
+    States.S: 1.,
+    States.E: 1.,
+    States.I_mild: 0.5,
+    States.I_wild: 0.05,
+    States.R: 1.,
+}
+
 # Source: https://www.researchgate.net/figure/Average-Daily-Travel-Time-per-Person-by-Age-Group_fig3_245561594
 AGE_TRAVEL_RATIO = np.concatenate((
     np.array([0.3] * 5),
